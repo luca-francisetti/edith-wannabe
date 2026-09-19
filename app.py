@@ -1,21 +1,21 @@
-import base64
-import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
+import pandas as pd
+import plotly.graph_objects as gg
+import os
 from google import genai
 from PIL import Image
 
-# 1. Carichiamo l'immagine per la scheda del PC
+# --- CARICAMENTO ICONA ---
 try:
-    icona_app = Image.open("icona.png")
+    icona = Image.open("icona.png")
 except Exception:
-    icona_app = "🤖"
+    icona = "🤖"  # Icona di riserva se l'immagine non viene trovata
 
-# 2. CONFIGURAZIONE PAGINA (Deve rimanere in alto come PRIMO comando Streamlit)
+# --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(
     page_title="Edith wannabe",
-    page_icon=icona_app,
+    page_icon=icona,
     layout="wide",
     initial_sidebar_state="expanded"
 )
