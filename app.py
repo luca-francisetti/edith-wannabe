@@ -25,6 +25,7 @@ except Exception:
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as gg
+from plotly.subplots import make_subplots
 from google import genai
 
 # 3. --- BLOCCO NUOVO DA INCOLLARE QUI (PER ANDROID / SMARTPHONE) ---
