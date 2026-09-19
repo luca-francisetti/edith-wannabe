@@ -2,20 +2,21 @@ import streamlit as st
 from PIL import Image
 import os
 
-# --- 1. CONFIGURAZIONE PAGINA (Dev'essere la PRIMA istruzione Streamlit) ---
+# --- 1. CARICAMENTO ICONA ---
 try:
-    icona = Image.open("icona.png")
+    icona_app = Image.open("icona.png")
 except Exception:
-    icona = "🤖"
+    icona_app = "🤖"  # Icona di riserva se il file manca
 
+# --- 2. CONFIGURAZIONE PAGINA (Prima istruzione Streamlit) ---
 st.set_page_config(
     page_title="Edith wannabe",
-    page_icon=icona,
+    page_icon=icona_app,
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 2. ALTRO IMPORT DELLE LIBRERIE ---
+# --- 3. ALTRE LIBRERIE ---
 import yfinance as yf
 import pandas as pd
 import plotly.graph_objects as gg
