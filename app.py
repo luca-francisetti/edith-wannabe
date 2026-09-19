@@ -16,6 +16,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- LOGO NELLA BARRA LATERALE ---
+try:
+    st.sidebar.image("icona.png", use_container_width=True)
+except Exception:
+    pass
 # --- 3. ALTRE LIBRERIE ---
 import yfinance as yf
 import pandas as pd
