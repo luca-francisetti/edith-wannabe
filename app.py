@@ -1,24 +1,25 @@
 import streamlit as st
-import yfinance as yf
-import pandas as pd
-import plotly.graph_objects as gg
-import os
-from google import genai
 from PIL import Image
+import os
 
-# --- CARICAMENTO ICONA ---
+# --- 1. CONFIGURAZIONE PAGINA (Dev'essere la PRIMA istruzione Streamlit) ---
 try:
     icona = Image.open("icona.png")
 except Exception:
-    icona = "🤖"  # Icona di riserva se l'immagine non viene trovata
+    icona = "🤖"
 
-# --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(
     page_title="Edith wannabe",
     page_icon=icona,
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# --- 2. ALTRO IMPORT DELLE LIBRERIE ---
+import yfinance as yf
+import pandas as pd
+import plotly.graph_objects as gg
+from google import genai
 
 # 3. --- BLOCCO NUOVO DA INCOLLARE QUI (PER ANDROID / SMARTPHONE) ---
 try:
