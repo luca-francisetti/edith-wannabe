@@ -11,15 +11,15 @@ import os
 # --- 1. CONFIGURAZIONE DELLA PAGINA & STILE BLU NAVY ---
 st.set_page_config(
     page_title="Edith - Piattaforma Finanziaria & IA",
-    page_icon="📈",
+    page_icon="icona.png",  # Carica icona.png nella stessa cartella su GitHub
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Stile visivo con metriche in Blu Navy e testo bianco ad alto contrasto
+# Stile visivo generale con metriche in Blu Navy e testo bianco ad alto contrasto
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; color: #ffffff; }
+    .main { color: #ffffff; }
     .stMetric { 
         background-color: #1e3a8a !important; 
         padding: 15px; 
@@ -32,11 +32,13 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. GESTIONE API KEY & GEMINI CON FALLBACK AUTOMATICO ---
+# --- 2. GESTIONE API KEY & GEMINI (NASCOSTA IN EXPANDER) ---
 st.sidebar.title("🚀 Edith Trading Hub")
 st.sidebar.markdown("---")
 
-api_key = st.sidebar.text_input("Inserisci Gemini API Key", type="password", value=st.secrets.get("GEMINI_API_KEY", ""))
+# API Key protetta e nascosta in un menu a scomparsa
+with st.sidebar.expander("⚙️ Configurazione API Key", expanded=not bool(st.secrets.get("GEMINI_API_KEY", ""))):
+    api_key = st.text_input("Inserisci Gemini API Key", type="password", value=st.secrets.get("GEMINI_API_KEY", ""))
 
 client = None
 if api_key:
@@ -47,7 +49,7 @@ if api_key:
 
 def get_gemini_response(prompt):
     if not client:
-        return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
+        return "⚠️ Inserisci la tua API Key di Gemini nella configurazione laterale per attivare l'Intelligenza Artificiale."
     
     models_to_try = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash"]
     
@@ -63,9 +65,9 @@ def get_gemini_response(prompt):
             last_error = str(e)
             continue
             
-    return f"⚠️ I server di Google sono temporaneamente sovraccarichi (Errore 503). Riprova tra qualche istante. Dettaglio: {last_error}"
+    return f"⚠️ I server di Google sono temporaneamente sovraccarichi. Riprova tra qualche istante. Dettaglio: {last_error}"
 
-# Funzione di supporto per lo stato RSI (Semaforo & Consiglio)
+# Funzione di supporto per lo stato RSI
 def calcola_stato_rsi(rsi_val):
     if np.isnan(rsi_val):
         return "⚪ N/D", "NEUTRAL"
@@ -91,9 +93,21 @@ menu = st.sidebar.radio(
 )
 
 # =====================================================================
-# SCHERMATA 1: HOME & PANORAMICA
+# SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Tony Stark Vetrina)
 # =====================================================================
 if menu == "🏠 Home & Panoramica":
+    # CSS personalizzato per applicare lo sfondo con opacità (effetto vetrina)
+    st.markdown("""
+        <style>
+        .stApp {
+            background: linear-gradient(rgba(14, 17, 23, 0.88), rgba(14, 17, 23, 0.88)), url('tony_stark.png');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     st.title("🏠 Home - Dashboard Finanziaria")
     st.markdown("Benvenuto nella tua applicazione di monitoraggio e analisi finanziaria assistita da IA.")
     
@@ -180,7 +194,6 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         st.markdown("---")
                         st.subheader(f"📊 Dati Fondamentali: {nome_lungo}")
                         
-                        # Box Semaforo & Consiglio in Blu Navy con testo bianco
                         st.markdown(f"""
                             <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center; font-family: sans-serif;">
                                 <div><b style="color: #93c5fd;">Stato RSI:</b> <span style="font-size: 1.1em; color: white;">{stato_rsi}</span></div>
@@ -229,7 +242,6 @@ elif menu == "📈 Grafici & Analisi Tecnica":
                 rsi_corrente = df['RSI'].iloc[-1]
                 stato_rsi, consiglio = calcola_stato_rsi(rsi_corrente)
                 
-                # Box Semaforo & Consiglio in Blu Navy
                 st.markdown(f"""
                     <div style="background-color: #1e3a8a; color: white; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; margin-bottom: 20px; text-align: center; font-family: sans-serif;">
                         <span style="font-size: 1.1em; margin-right: 20px; color: white;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
@@ -468,25 +480,22 @@ elif menu == "🏢 Immobili & REITs Mensili":
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
     
-    # 1. Doppio Orologio (Milano / New York) con logica oraria richiesta
     now_milano = datetime.now(ZoneInfo("Europe/Rome"))
     now_ny = datetime.now(ZoneInfo("America/New_York"))
     
     min_milano = now_milano.hour * 60 + now_milano.minute
     
-    # Milano: Verde 09:05-10:00 (545-600 min), Rosso 11:30-14:30 (690-870 min)
     if 545 <= min_milano <= 600:
-        color_milano = "#4ade80"  # Verde
+        color_milano = "#4ade80" 
     elif 690 <= min_milano <= 870:
-        color_milano = "#ef4444"  # Rosso
+        color_milano = "#ef4444" 
     else:
         color_milano = "white"
 
-    # New York (su orario italiano): Verde 15:30-16:30 (930-990 min), Rosso 21:00-22:00 (1260-1320 min)
     if 930 <= min_milano <= 990:
-        color_ny = "#4ade80"  # Verde
+        color_ny = "#4ade80" 
     elif 1260 <= min_milano <= 1320:
-        color_ny = "#ef4444"  # Rosso
+        color_ny = "#ef4444" 
     else:
         color_ny = "white"
     
@@ -508,7 +517,6 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # 2. Disclaimer Commissioni TR Compatto
     st.markdown("""
         <div style="background-color: #1e3a8a; padding: 10px 15px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em; color: white;">
             💡 <b>Nota Commissioni TR:</b> 1€ acquisto + 1€ vendita (Totale 2€ fissi). I micro-investimenti (es. 10€) subiscono un forte impatto commissionale; si consigliano capitali da 200€–400€ per ottimizzare il margine.
