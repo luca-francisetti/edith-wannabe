@@ -5,6 +5,7 @@ import yfinance as yf
 import plotly.graph_objects as go
 from google import genai
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import os
 
 # --- 1. CONFIGURAZIONE DELLA PAGINA ---
@@ -257,7 +258,7 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
 
     with tab2:
         st.subheader("🏆 Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
-        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione (inclusi i mensili come Realty Income, Main Street Capital e STAG Industrial). I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
+        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione. I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
 
         top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
         
@@ -293,15 +294,13 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
             st.dataframe(df_div, use_container_width=True)
 
         st.markdown("---")
-        st.subheader("🤖 Analisi IA 'Dividend Trap' (Trappola da Dividendo)")
-        st.markdown("Se un'azienda offre un dividendo superiore all'8-10%, spesso nasconde problemi di bilancio o un crollo del titolo. Chiedi a Gemini di verificare un titolo specifico:")
-        
+        st.subheader("🤖 Analisi IA 'Dividend Trap'")
         titolo_da_verificare = st.text_input("Inserisci Ticker da analizzare per il rischio trappola:", value="MO")
         if st.button("Esegui Controllo Trappola Dividendo"):
             with st.spinner("L'intelligenza artificiale sta esaminando la sostenibilità del dividendo..."):
                 prompt = f"""
                 Analizza il titolo azionario {titolo_da_verificare} dal punto di vista della sostenibilità del suo dividendo. 
-                Verifica se il dividend yield elevato rappresenta una 'trappola da dividendo' (dividend trap) dovuta a crollo del business, debito eccessivo o payout ratio insostenibile, oppure se è un dividendo sicuro e solido. 
+                Verifica se il dividend yield elevato rappresenta una 'trappola da dividendo' (dividend trap) dovuta a crollo del business o debito eccessivo, oppure se è un dividendo sicuro. 
                 Fornisci un verdetto chiaro e motivato.
                 """
                 parere_ia = get_gemini_response(prompt)
@@ -310,8 +309,6 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
 
     with tab3:
         st.subheader("🔥 Top 10 Alto Yield & Rischio (Potenziali Dividend Traps)")
-        st.markdown("Questa sezione monitora un ulteriore gruppo di 10 titoli noti per percentuali di dividendo molto elevate (spesso esposte a maggiore volatilità o rischio speculativo). I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
-
         high_yield_tickers = ["PBR", "ENI.MI", "BTI", "AGNC", "NLY", "VOD", "VZ", "T", "PFE", "LEG"]
         
         dati_high_yield = []
@@ -346,104 +343,130 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
             df_hy = df_hy.sort_values(by="Dividend Yield (%)", ascending=False)
             st.dataframe(df_hy, use_container_width=True)
 
-        st.markdown("---")
-        st.warning("⚠️ **Nota sul Rischio Elevato:** I titoli con rendimenti percentuali molto alti richiedono cautela estrema. Spesso un dividend yield elevato è il sintomo di un prezzo azionario in forte calo o di una scarsa sostenibilità dei flussi di cassa futuri.")
-
 # =====================================================================
 # SCHERMATA 5: SALA SEGNALI (DAY TRADING - SOLO LONG)
 # =====================================================================
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
-    st.markdown("Monitoraggio attivo focalizzato esclusivamente su operazioni **Long** (acquisto al rialzo) per chi opera con piccoli capitali.")
     
-    # Disclaimer Trade Republic in evidenza
+    # 1. Doppio Orologio (Milano / New York) su sfondo Blue Navy (#1e3a8a)
+    now_milano = datetime.now(ZoneInfo("Europe/Rome"))
+    now_ny = datetime.now(ZoneInfo("America/New_York"))
+    
+    col_cl1, col_cl2 = st.columns(2)
+    with col_cl1:
+        st.markdown(f"""
+            <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
+                <b>📍 MILANO (Borsa Italiana)</b><br>
+                <span style="font-size: 1.3em; font-weight: bold;">{now_milano.strftime('%H:%M:%S')}</span>
+            </div>
+        """, unsafe_allow_html=True)
+    with col_cl2:
+        st.markdown(f"""
+            <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
+                <b>🗽 NEW YORK (Wall Street)</b><br>
+                <span style="font-size: 1.3em; font-weight: bold;">{now_ny.strftime('%H:%M:%S')}</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # 2. Disclaimer Commissioni TR Compatto
     st.markdown("""
-        <div style="background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #374151; margin-bottom: 20px;">
-            <h4 style="color: #60a5fa; margin-top: 0;">💡 Nota Importante: Commissioni Trade Republic & Micro-Capitale</h4>
-            <p style="color: #d1d5db; margin-bottom: 5px;">• <b>Costo Commissione:</b> Trade Republic applica <b>1€ per l'acquisto</b> e <b>1€ per la vendita</b> (totale <b>2€ fissi</b> di commissioni per ogni operazione completata).</p>
-            <p style="color: #d1d5db; margin-bottom: 0;">• <b>Partire da 10€:</b> Sotto ogni segnale troverai un box colorato dedicato con il calcolo esatto per un investimento di <b>10€</b>, così vedrai subito l'impatto reale delle commissioni fisse del broker.</p>
+        <div style="background-color: #111827; padding: 10px 15px; border-radius: 8px; border: 1px solid #374151; font-size: 0.9em; color: #9ca3af;">
+            💡 <b>Nota Commissioni TR:</b> 1€ acquisto + 1€ vendita (Totale 2€ fissi). I micro-investimenti (es. 10€) subiscono un forte impatto commissionale; si consigliano capitali da 200€–400€ per ottimizzare il margine.
         </div>
     """, unsafe_allow_html=True)
     
-    now = datetime.now()
-    ora_formattata = now.strftime('%H:%M')
-    giorno_settimana = now.weekday()
-    ora_num = now.hour + now.minute / 60.0
-    
-    in_finestra_eu = (9.05 <= ora_num <= 10.0) and (giorno_settimana < 5)
-    in_finestra_us = (15.5 <= ora_num <= 16.5) and (giorno_settimana < 5)
-    
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        st.metric("Orario Corrente", ora_formattata)
-    with col_t2:
-        if in_finestra_eu or in_finestra_us:
-            st.success("🟢 MERCATO IN FASCIA CALDA (Alta Volatilità)")
-        else:
-            st.info("🟡 Mercato in fase di attesa o fuori dalle finestre principali")
-            
     st.markdown("---")
-    st.subheader("⚡ Top 5 Segnali Long (Dal Migliore al Meno Migliore)")
-    st.markdown("Clicca sul pulsante per scansionare i mercati e trovare le migliori occasioni di acquisto al rialzo:")
+    st.subheader("⚡ Top 5 Segnali Long (Analisi Quantitativa in Tempo Reale)")
 
-    if st.button("🚀 Scansiona e Mostra Top 5 Segnali Long", type="primary"):
-        with st.spinner("L'intelligenza artificiale sta analizzando i titoli per trovare le migliori opportunità Long..."):
-            paniere_day = ["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "NFLX", "AMD", "ENEL.MI", "UCG.MI", "RACE.MI"]
-            dati_sintesi_intraday = []
+    if st.button("🚀 Avvia Scansione e Calcola Top 5 Long", type="primary"):
+        with st.spinner("Scansione mercati e calcolo indicatori in corso..."):
+            paniere_day = [
+                ("TSLA", "Tesla Inc."),
+                ("AAPL", "Apple Inc."),
+                ("NVDA", "NVIDIA Corp."),
+                ("MSFT", "Microsoft Corp."),
+                ("AMZN", "Amazon.com Inc."),
+                ("AMD", "Advanced Micro Devices"),
+                ("ENEL.MI", "Enel S.p.A."),
+                ("UCG.MI", "UniCredit S.p.A."),
+                ("RACE.MI", "Ferrari N.V.")
+            ]
             
-            for t in paniere_day:
+            risultati_analisi = []
+            for ticker, nome_compagnia in paniere_day:
                 try:
-                    tk = yf.Ticker(t)
-                    df_5m = tk.history(period="1d", interval="5m")
-                    if not df_5m.empty and len(df_5m) > 5:
-                        ultimo_prezzo = df_5m['Close'].iloc[-1]
-                        apertura_giornata = df_5m['Open'].iloc[0]
-                        variazione_pct = ((ultimo_prezzo - apertura_giornata) / apertura_giornata) * 100
-                        vol_medio = df_5m['Volume'].mean()
-                        vol_ultimo = df_5m['Volume'].iloc[-1]
-                        spike = "🔥 SPIKE" if vol_medio > 0 and vol_ultimo > (vol_medio * 1.3) else "Normale"
+                    tk = yf.Ticker(ticker)
+                    df = tk.history(period="1d", interval="5m")
+                    if not df.empty and len(df) > 3:
+                        p_attuale = df['Close'].iloc[-1]
+                        p_apertura = df['Open'].iloc[0]
+                        var_pct = ((p_attuale - p_apertura) / p_apertura) * 100
+                        vol_medio = df['Volume'].mean()
+                        vol_ultimo = df['Volume'].iloc[-1]
                         
-                        dati_sintesi_intraday.append(f"- Ticker: {t} | Prezzo Attuale: {ultimo_prezzo:.2f} | Variazione Oggi: {variazione_pct:+.2f}% | Volumi: {spike}")
+                        score = var_pct + (2.0 if vol_ultimo > vol_medio * 1.2 else 0.0)
+                        
+                        risultati_analisi.append({
+                            "ticker": ticker,
+                            "nome": nome_compagnia,
+                            "prezzo": p_attuale,
+                            "var": var_pct,
+                            "score": score
+                        })
                 except Exception:
                     pass
             
-            prompt_sala = f"""
-            Agisci come un trader quantitativo professionista ed esperto di Day Trading focalizzato UNICAMENTE su operazioni LONG (acquisto al rialzo, compatibili con Trade Republic).
-            Analizza questi dati intraday in tempo reale:
-            {chr(10).join(dati_sintesi_intraday)}
+            risultati_analisi = sorted(risultati_analisi, key=lambda x: x['score'], reverse=True)[:5]
             
-            Seleziona rigorosamente le **Top 5 azioni** migliori per una strategia LONG, **ordinate tassativamente dalla MIGLIORE alla meno migliore** in base al momentum rialzista e alla forza relativa.
-            NON includere operazioni Short o di vendita allo scoperto. Solo acquisti al rialzo.
-            
-            Per ciascuna azione fornisci in modo chiaro e strutturato:
-            1. **Posizione in classifica** (1 = Migliore)
-            2. **Ticker & Prezzo Attuale** (es. TSLA a 380.24)
-            3. **Target % di Rialzo** (es. +0.85%)
-            4. **Prezzo a cui vendere (Target Price)** (Calcola il prezzo esatto: Prezzo Attuale * (1 + Target%/100))
-            5. **SIMULAZIONE MICRO-INVESTIMENTO 10€ (OBBLIGATORIO IN UN BOX COLORATO):**
-               Includi per ogni azione un blocco HTML evidenziato con uno sfondo colorato (stile card scura con bordo colorato a destra/sinistra) che calcoli ESATTAMENTE:
-               - Capitale Investito: 10,00 €
-               - Guadagno Lordo sul Target % (es. 10€ * Target%)
-               - Commissioni Fisse Trade Republic: 2,00 € (1€ acquisto + 1€ vendita)
-               - Risultato Netto Finale (Guadagno Lordo - 2€), spiegando chiaramente l'impatto delle commissioni sul piccolo capitale.
-            6. **Timeframe consigliato** (es. 20 minuti) e motivazione tecnica sintetica.
-            
-            Usa rigorosamente questo formato HTML per il box da 10€ in ogni titolo:
-            <div style="background-color: #162032; padding: 12px; border-radius: 8px; border-left: 5px solid #10b981; margin: 10px 0;">
-                <b style="color: #34d399;">💎 SIMULAZIONE MICRO-INVESTIMENTO (10€):</b><br>
-                - Capitale: 10.00 €<br>
-                - Target Prezzo di Vendita: [Inserisci valore calcolato]<br>
-                - Guadagno Lordo: [Inserisci valore calcolato]<br>
-                - Commissioni fisse Trade Republic: 2.00 €<br>
-                - <b>Utile / Perdita Netto Reale: [Inserisci valore netto e breve nota]</b>
-            </div>
-            """
-            
-            segnali_ia = get_gemini_response(prompt_sala)
-            st.markdown("### 📊 Tabella Operativa Long & Micro-Investimenti (10€):")
-            st.markdown(segnali_ia)
+            if not risultati_analisi:
+                st.warning("Non è stato possibile recuperare i dati in tempo reale in questo momento.")
+            else:
+                for idx, item in enumerate(risultati_analisi, 1):
+                    p_curr = item['prezzo']
+                    target_pct = 1.00 
+                    p_target = p_curr * (1 + target_pct / 100.0)
+                    
+                    cap_10 = 10.0
+                    lordo_10 = cap_10 * (target_pct / 100.0)
+                    netto_10 = lordo_10 - 2.0 
+                    
+                    cap_consigliato = 200.0 if p_curr < 200 else 400.0
+                    lordo_cons = cap_consigliato * (target_pct / 100.0)
+                    netto_cons = lordo_cons - 2.0
+                    
+                    with st.container():
+                        st.markdown(f"### #{idx} — {item['nome']} (`{item['ticker']}`)")
+                        col_main, col_mini = st.columns([2, 1])
+                        
+                        with col_main:
+                            st.markdown(f"""
+                            - **Prezzo Attuale:** € {p_curr:,.2f}  
+                            - **Variazione Intraday:** `{item['var']:+.2f}%`  
+                            - **Target di Rialzo:** `+{target_pct:.2f}%`  
+                            - **Prezzo di Vendita (Target):** **€ {p_target:,.2f}**  
+                            - **Capitale Consigliato:** `€ {cap_consigliato:,.0f}` (Utile lordo stimato: € {lordo_cons:.2f} | Netto: € {netto_cons:.2f})  
+                            - **Timeframe:** 25–40 minuti | **Strategia:** Long intraday momentum.
+                            """)
+                        
+                        with col_mini:
+                            st.markdown(f"""
+                            <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em;">
+                                <div style="font-weight: bold; margin-bottom: 6px; color: #93c5fd;">💎 Micro-Investimento (10€)</div>
+                                • Capitale: <b>€ 10,00</b><br>
+                                • Target Vendita: <b>€ {p_target:,.2f}</b><br>
+                                • Lordo: € {lordo_10:.2f}<br>
+                                • Commissioni TR: € 2,00<br>
+                                <hr style="margin: 6px 0; border-color: #3b82f6;">
+                                • Netto: <b style="color: {"#f87171" if netto_10 < 0 else "#4ade80"};">€ {netto_10:.2f}</b>
+                            </div>
+                            """, unsafe_allow_html=True)
+                            
+                        st.markdown("---")
     else:
-        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi e vedere i segnali Long pronti con la simulazione da 10€.")
+        st.info("👆 Clicca sul pulsante sopra per avviare la scansione dei mercati e visualizzare i segnali.")
 
 # =====================================================================
 # SCHERMATA 6: ASSISTENTE IA & SEGNALI
