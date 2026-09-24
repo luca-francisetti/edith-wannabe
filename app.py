@@ -65,6 +65,7 @@ menu = st.sidebar.radio(
         "🔍 Rubrica A-Z & Ricerca Universale", 
         "📈 Grafici & Analisi Tecnica", 
         "💰 Cantiere Dividendi & Tasse",
+        "🏢 Immobili & REITs Mensili",
         "🚨 Sala Segnali (Day Trading)",
         "🤖 Assistente IA & Segnali"
     ]
@@ -98,7 +99,7 @@ if menu == "🏠 Home & Panoramica":
         idx += 1
 
     st.markdown("---")
-    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi** o la **Sala Segnali**.")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi**, i **REITs Immobiliari** o la **Sala Segnali**.")
 
 # =====================================================================
 # SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
@@ -344,7 +345,85 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
             st.dataframe(df_hy, use_container_width=True)
 
 # =====================================================================
-# SCHERMATA 5: SALA SEGNALI (DAY TRADING - SOLO LONG)
+# SCHERMATA 5: IMMOBILI & REITs MENSILI
+# =====================================================================
+elif menu == "🏢 Immobili & REITs Mensili":
+    st.title("🏢 Immobili & Frazionamento (REITs)")
+    st.markdown("""
+    Per investire in immobili e ottenere rendite passive con percentuali minime di edifici senza sborsare centinaia di migliaia d'euro, sfrutteremo i **REIT (Real Estate Investment Trusts)**.
+    
+    Sono società immobiliari quotate in borsa (acquistabili comodamente su **Trade Republic** a partire da pochi euro) che per legge devono distribuire quasi tutti gli affitti percepiti sotto forma di dividendi mensili o trimestrali.
+    """)
+    
+    st.markdown("---")
+    st.subheader("🏙️ Immobili & REITs Mensili: I 10 Migliori Globali su Trade Republic")
+    st.markdown("Una sezione dedicata ai 10 migliori REITs globali presenti su Trade Republic che pagano dividendi con stima precisa di quanto ti tornerà in tasca ogni singolo mese su **100€** e, in evidenza nella colonna a destra, su **10€** (perché parti dal basso).")
+
+    reits_mensili_data = [
+        {"ticker": "O", "nome": "Realty Income Corp.", "settore": "Retail / Commerciale", "yield": 5.3},
+        {"ticker": "STAG", "nome": "STAG Industrial Inc.", "settore": "Logistica & Magazzini", "yield": 4.1},
+        {"ticker": "LTC", "nome": "LTC Properties Inc.", "settore": "Sanitario / Senior Housing", "yield": 6.2},
+        {"ticker": "EPR", "nome": "EPR Properties", "settore": "Intrattenimento & Esperienziale", "yield": 6.5},
+        {"ticker": "GOOD", "nome": "Gladstone Commercial", "settore": "Uffici & Industriale", "yield": 8.0},
+        {"ticker": "ADC", "nome": "Agree Realty Corp.", "settore": "Retail / Negozi", "yield": 4.4},
+        {"ticker": "LAND", "nome": "Gladstone Land Corp.", "settore": "Terreni Agricoli (Farmland)", "yield": 4.8},
+        {"ticker": "AGNC", "nome": "AGNC Investment Corp.", "settore": "Mortgage REITs / Mutui", "yield": 14.0},
+        {"ticker": "NLY", "nome": "Annaly Capital Management", "settore": "Mortgage REITs / Finanziario", "yield": 13.5},
+        {"ticker": "PSEC", "nome": "Prospect Capital Corp.", "settore": "Finanziario / Immobili", "yield": 11.0}
+    ]
+
+    tabella_reit_output = []
+    for r in reits_mensili_data:
+        y = r["yield"]
+        
+        # Calcolo su 100€
+        lordo_100 = 100.0 * (y / 100.0)
+        t_est_100 = lordo_100 * 0.15
+        t_ita_100 = max(0.0, (lordo_100 * 0.26) - t_est_100)
+        netto_mensile_100 = max(0.0, (lordo_100 - t_est_100 - t_ita_100) / 12.0)
+        
+        # Calcolo su 10€ (Partendo dal basso)
+        lordo_10 = 10.0 * (y / 100.0)
+        t_est_10 = lordo_10 * 0.15
+        t_ita_10 = max(0.0, (lordo_10 * 0.26) - t_est_10)
+        netto_mensile_10 = max(0.0, (lordo_10 - t_est_10 - t_ita_10) / 12.0)
+        
+        tabella_reit_output.append({
+            "Ticker": r["ticker"],
+            "Società": r["nome"],
+            "Settore": r["settore"],
+            "Yield (%)": f"{y:.2f}%",
+            "Netto Mensile (su 100€)": f"€ {netto_mensile_100:.4f}",
+            "🟢 Netto Mensile (su 10€)": f"€ {netto_mensile_10:.4f}"
+        })
+
+    df_reit_view = pd.DataFrame(tabella_reit_output)
+    st.dataframe(df_reit_view, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("🧮 Calcolatore Rendita Passiva Metri Quadri Frazionati")
+    
+    col_sim_r1, col_sim_r2 = st.columns(2)
+    with col_sim_r1:
+        capitale_reit = st.number_input("Capitale Investito in REITs (€)", min_value=10.0, value=150.0, step=10.0)
+    with col_sim_r2:
+        yield_reit_scelto = st.slider("Dividend Yield medio atteso (%)", min_value=3.0, max_value=15.0, value=5.5, step=0.1)
+        
+    lordo_reit_annuo = capitale_reit * (yield_reit_scelto / 100.0)
+    tass_est_reit = lordo_reit_annuo * 0.15
+    tass_ita_reit = max(0.0, (lordo_reit_annuo * 0.26) - tass_est_reit)
+    netto_annuo_reit = lordo_reit_annuo - tass_est_reit - tass_ita_reit
+    netto_mensile_reit = netto_annuo_reit / 12.0
+
+    cr1, cr2, cr3 = st.columns(3)
+    cr1.metric("Rendita Lorda Annua", f"€ {lordo_reit_annuo:.2f}")
+    cr2.metric("Rendita Netta Annua", f"€ {netto_annuo_reit:.2f}")
+    cr3.metric("Rendita Netta Mensile", f"€ {netto_mensile_reit:.2f}", delta="al mese")
+
+    st.info(f"💡 **Suggerimento Operativo:** Con soli **€ {capitale_reit:,.2f}** investiti in REITs, possiedi una piccola frazione di centinaia di immobili commerciali e logistici nel mondo, ricevendo ogni mese circa **€ {netto_mensile_reit:.2f}** netti sul tuo conto Trade Republic.")
+
+# =====================================================================
+# SCHERMATA 6: SALA SEGNALI (DAY TRADING - SOLO LONG)
 # =====================================================================
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
@@ -487,13 +566,13 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
         st.info("👆 Clicca sul pulsante sopra per avviare la scansione dei mercati e visualizzare i segnali.")
 
 # =====================================================================
-# SCHERMATA 6: ASSISTENTE IA & SEGNALI
+# SCHERMATA 7: ASSISTENTE IA & SEGNALI
 # =====================================================================
 elif menu == "🤖 Assistente IA & Segnali":
     st.title("🤖 Assistente IA Gemini & Analisi Operativa")
     st.markdown("Fai domande di finanza o chiedi un'analisi intelligente su un titolo.")
     
-    domanda = st.text_area("Scrivi la tua richiesta o il titolo da analizzare:", value="Dammi un parere generale sull'investimento in azioni a dividendo alto.")
+    domanda = st.text_area("Scrivi la tua richiesta o il titolo da analizzare:", value="Dammi un parere sui REITs immobiliari e come inserirli in un piano d'accumulo a piccolo budget.")
     
     if st.button("Chiedi a Gemini"):
         with st.spinner("L'intelligenza artificiale sta elaborando la risposta..."):
