@@ -39,7 +39,6 @@ def get_gemini_response(prompt):
     if not client:
         return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
     
-    # Lista di modelli con fallback automatico in caso di errore 503 o traffico elevato
     models_to_try = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"]
     
     last_error = ""
@@ -238,20 +237,21 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         tassa_totale_dovuta = base_netta_lorda * 0.26
         tassa_italia_aggiuntiva = max(0.0, tassa_totale_dovuta - tassa_estera)
         
-        dividendo_netto = base_netta_lorda - tassa_estera - tassa_italia_aggiuntiva - commissione_tr
+        dividendo_netto_annuo = base_netta_lorda - tassa_estera - tassa_italia_aggiuntiva - commissione_tr
+        dividendo_netto_mensile = max(0.0, dividendo_netto_annuo / 12.0)
 
         st.markdown("---")
         res1, res2, res3, res4 = st.columns(4)
-        res1.metric("Dividendo Lordo", f"€ {dividendo_lordo:.2f}")
-        res2.metric("Commissioni TR", f"€ {commissione_tr:.2f}")
-        res3.metric("Tasse (Estera + ITA 26%)", f"€ {tassa_estera + tassa_italia_aggiuntiva:.2f}")
-        res4.metric("Dividendo Netto Reale", f"€ {dividendo_netto:.2f}", delta=f"{((dividendo_netto/capitale)*100):.2f}% effettivo")
+        res1.metric("Dividendo Lordo Annuo", f"€ {dividendo_lordo:.2f}")
+        res2.metric("Commissione TR (Una tantum)", f"€ {commissione_tr:.2f}")
+        res3.metric("Tasse (Estera + ITA)", f"€ {tassa_estera + tassa_italia_aggiuntiva:.2f}")
+        res4.metric("Netto Mensile Reale", f"€ {dividendo_netto_mensile:.2f}", delta="al mese")
 
         st.info("ℹ️ **Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia.")
 
     with tab2:
         st.subheader("🏆 Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
-        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione (inclusi i mensili come Realty Income, Main Street Capital e STAG Industrial).")
+        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione (inclusi i mensili come Realty Income, Main Street Capital e STAG Industrial). I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
 
         top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
         
@@ -266,17 +266,19 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 div_raw = inf.get('dividendYield', 0)
                 div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
                 
-                lordo_100 = 100.0 * (div_yield / 100.0)
-                tassa_est = lordo_100 * 0.15 
-                tassa_ita = max(0.0, (lordo_100 * 0.26) - tassa_est)
-                netto_100 = lordo_100 - tassa_est - tassa_ita - 1.0 
+                # Calcolo Netto Mensile su 100€
+                lordo_100_annuo = 100.0 * (div_yield / 100.0)
+                tassa_est = lordo_100_annuo * 0.15 
+                tassa_ita = max(0.0, (lordo_100_annuo * 0.26) - tassa_est)
+                netto_annuo = lordo_100_annuo - tassa_est - tassa_ita
+                netto_mensile = max(0.0, netto_annuo / 12.0)
                 
                 dati_dividendi.append({
                     "Ticker": t,
                     "Nome": nome,
                     "Prezzo ($/€)": prezzo,
                     "Dividend Yield (%)": round(div_yield, 2),
-                    "Netto su 100€ (€)": round(max(0.0, netto_100), 2)
+                    "Netto Mensile su 100€ (€)": round(netto_mensile, 2)
                 })
             except Exception:
                 pass
@@ -315,5 +317,4 @@ elif menu == "🤖 Assistente IA & Segnali":
             risposta = get_gemini_response(domanda)
             st.markdown("### Risposta di Gemini:")
             st.write(risposta)
-            st.markdown("### Risposta di Gemini:")
             st.write(risposta)
