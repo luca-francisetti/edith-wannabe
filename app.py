@@ -51,7 +51,7 @@ if api_key:
 
 # --- 4. BARRA LATERALE E NAVIGAZIONE ---
 try:
-    st.sidebar.image("logo.png", width=120) # Sostituisci "logo.png" con il nome esatto del tuo file
+    st.sidebar.image("icona.png", width=120) # Sostituisci "icona.png" con il nome esatto del tuo file
 except:
     pass
 
