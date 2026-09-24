@@ -50,6 +50,11 @@ if api_key:
         st.sidebar.error(f"Errore inizializzazione IA: {e}")
 
 # --- 4. BARRA LATERALE E NAVIGAZIONE ---
+try:
+    st.sidebar.image("logo.png", width=120) # Sostituisci "logo.png" con il nome esatto del tuo file
+except:
+    pass
+
 st.sidebar.markdown("# 🤖 Edith wannabe")
 st.sidebar.markdown("*Assistente Quantitativo & Trading*")
 st.sidebar.markdown("---")
