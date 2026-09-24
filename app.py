@@ -1,7 +1,11 @@
 import streamlit as st
 from PIL import Image
 import os
-
+import yfinance as yf
+import pandas as pd
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from google import genai
 # --- 1. CARICAMENTO ICONA ---
 try:
     icona_app = Image.open("icona.png")
