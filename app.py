@@ -40,7 +40,7 @@ def get_gemini_response(prompt):
     if not client:
         return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
     
-    models_to_try = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"]
+    models_to_try = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash"]
     
     last_error = ""
     for model_name in models_to_try:
@@ -350,15 +350,24 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         st.warning("⚠️ **Nota sul Rischio Elevato:** I titoli con rendimenti percentuali molto alti richiedono cautela estrema. Spesso un dividend yield elevato è il sintomo di un prezzo azionario in forte calo o di una scarsa sostenibilità dei flussi di cassa futuri.")
 
 # =====================================================================
-# SCHERMATA 5: SALA SEGNALI (DAY TRADING)
+# SCHERMATA 5: SALA SEGNALI (DAY TRADING - SOLO LONG)
 # =====================================================================
 elif menu == "🚨 Sala Segnali (Day Trading)":
-    st.title("🚨 Sala Segnali - Day Trading & Volatilità Istantanea")
-    st.markdown("Monitoraggio attivo focalizzato sulle finestre ad alta volatilità: **Apertura Europea (9:05 - 10:00)** e **Apertura Wall Street (15:30 - 16:30)**.")
+    st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
+    st.markdown("Monitoraggio attivo focalizzato esclusivamente su operazioni **Long** (acquisto al rialzo) per chi opera tramite Trade Republic.")
+    
+    # Disclaimer Trade Republic in evidenza
+    st.markdown("""
+        <div style="background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #374151; margin-bottom: 20px;">
+            <h4 style="color: #60a5fa; margin-top: 0;">💡 Nota Importante: Commissioni Trade Republic & Capitale Minimo</h4>
+            <p style="color: #d1d5db; margin-bottom: 5px;">• <b>Costo Commissione:</b> Trade Republic applica <b>1€ per l'acquisto</b> e <b>1€ per la vendita</b> (totale 2€ di costi fissi per completare l'operazione di round-trip).</p>
+            <p style="color: #d1d5db; margin-bottom: 0;">• <b>Regola del Guadagno Netto:</b> Affinché il profitto della vendita superi i costi fissi del broker, l'investimento deve essere calibrato correttamente in base al target percentuale stimato.</p>
+        </div>
+    """, unsafe_allow_html=True)
     
     now = datetime.now()
     ora_formattata = now.strftime('%H:%M')
-    giorno_settimana = now.weekday() # 0-4 = Lun-Ven
+    giorno_settimana = now.weekday()
     ora_num = now.hour + now.minute / 60.0
     
     in_finestra_eu = (9.05 <= ora_num <= 10.0) and (giorno_settimana < 5)
@@ -371,15 +380,15 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
         if in_finestra_eu or in_finestra_us:
             st.success("🟢 MERCATO IN FASCIA CALDA (Alta Volatilità)")
         else:
-            st.info("🟡 Mercato in fase di attesa o fuori dalle finestre principali di Day Trading")
+            st.info("🟡 Mercato in fase di attesa o fuori dalle finestre principali")
             
     st.markdown("---")
-    st.subheader("⚡ Top 5 Azioni Calde del Momento (Scansione Automatica IA)")
-    st.markdown("Clicca sul pulsante per scansionare i micro-movimenti a 5 minuti e i volumi anomali dei principali titoli globali:")
+    st.subheader("⚡ Top 5 Segnali Long (Dal Migliore al Meno Migliore)")
+    st.markdown("Clicca sul pulsante per scansionare i mercati e trovare le migliori occasioni di acquisto al rialzo:")
 
-    if st.button("🚀 Scansiona Mercati e Genera Top 5 Segnali Ora", type="primary"):
-        with st.spinner("L'intelligenza artificiale sta analizzando i volumi intraday (5m)..."):
-            paniere_day = ["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "ENEL.MI", "UCG.MI", "RACE.MI", "GOOGL", "META"]
+    if st.button("🚀 Scansiona e Mostra Top 5 Segnali Long", type="primary"):
+        with st.spinner("L'intelligenza artificiale sta analizzando i titoli per trovare le migliori opportunità Long..."):
+            paniere_day = ["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "GOOGL", "META", "NFLX", "AMD", "ENEL.MI", "UCG.MI", "RACE.MI"]
             dati_sintesi_intraday = []
             
             for t in paniere_day:
@@ -392,30 +401,34 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
                         variazione_pct = ((ultimo_prezzo - apertura_giornata) / apertura_giornata) * 100
                         vol_medio = df_5m['Volume'].mean()
                         vol_ultimo = df_5m['Volume'].iloc[-1]
-                        spike = "🔥 SPIKE VOLUMI" if vol_medio > 0 and vol_ultimo > (vol_medio * 1.5) else "Normale"
+                        spike = "🔥 SPIKE" if vol_medio > 0 and vol_ultimo > (vol_medio * 1.3) else "Normale"
                         
-                        dati_sintesi_intraday.append(f"- Ticker: {t} | Variazione Oggi: {variazione_pct:+.2f}% | Prezzo: {ultimo_prezzo:.2f} | Stato Volumi: {spike}")
+                        dati_sintesi_intraday.append(f"- Ticker: {t} | Prezzo Attuale: {ultimo_prezzo:.2f} | Variazione Oggi: {variazione_pct:+.2f}% | Volumi: {spike}")
                 except Exception:
                     pass
             
             prompt_sala = f"""
-            Agisci come un trader quantitativo professionista ed esperto di Day Trading a brevissimo termine (operazioni da 15-30 minuti).
+            Agisci come un trader quantitativo professionista ed esperto di Day Trading focalizzato UNICAMENTE su operazioni LONG (acquisto al rialzo, compatibili con Trade Republic).
             Analizza questi dati intraday in tempo reale:
             {chr(10).join(dati_sintesi_intraday)}
             
-            Seleziona rigorosamente le **Top 5 azioni** più promettenti del momento per operatività di day trading.
-            Per ciascuna azione fornisci:
-            1. Indicazione chiara con emoji (es. 🟢 COMPRA SUBITO o 🔴 VENDI ORA).
-            2. Ticker e motivazione tecnica basata sui dati forniti (variazione e volumi).
-            3. Target di profitto stimato e timeframe (es. Target +1.5% in 20 minuti).
-            Scrivi in modo diretto, professionale e ad alto impatto visivo.
+            Seleziona rigorosamente le **Top 5 azioni** migliori per una strategia LONG, **ordinate tassativamente dalla MIGLIORE alla meno migliore** in base al momentum rialzista e alla forza relativa.
+            NON includere operazioni Short o di vendita allo scoperto. Solo acquisti al rialzo.
+            
+            Per ciascuna azione fornisci in modo chiaro e strutturato:
+            1. **Posizione in classifica** (1 = Migliore)
+            2. **Ticker & Prezzo Attuale** (es. TSLA a 380.24)
+            3. **Target % di Rialzo** (es. +0.85%)
+            4. **Prezzo a cui vendere (Target Price)** (Calcola il prezzo esatto: Prezzo Attuale * (1 + Target%/100))
+            5. **Guadagno Lordo stimato su 200€ di investimento** e **Capitale Minimo consigliato** affinché il guadagno superi i costi fissi di commissione di Trade Republic (2€ totali tra acquisto e vendita).
+            6. **Timeframe consigliato** (es. 20 minuti) e motivazione tecnica sintetica.
             """
             
             segnali_ia = get_gemini_response(prompt_sala)
-            st.markdown("### 📊 Report Operativo in Tempo Reale:")
+            st.markdown("### 📊 Tabella Operativa Long per Trade Republic:")
             st.markdown(segnali_ia)
     else:
-        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi istantanea della Sala Segnali.")
+        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi e vedere i segnali Long pronti.")
 
 # =====================================================================
 # SCHERMATA 6: ASSISTENTE IA & SEGNALI
