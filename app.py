@@ -349,23 +349,41 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
     
-    # 1. Doppio Orologio (Milano / New York) su sfondo Blue Navy (#1e3a8a)
+    # 1. Doppio Orologio (Milano / New York) con logica oraria richiesta
     now_milano = datetime.now(ZoneInfo("Europe/Rome"))
     now_ny = datetime.now(ZoneInfo("America/New_York"))
+    
+    min_milano = now_milano.hour * 60 + now_milano.minute
+    
+    # Milano: Verde 09:05-10:00 (545-600 min), Rosso 11:30-14:30 (690-870 min)
+    if 545 <= min_milano <= 600:
+        color_milano = "#4ade80"  # Verde
+    elif 690 <= min_milano <= 870:
+        color_milano = "#ef4444"  # Rosso
+    else:
+        color_milano = "white"
+
+    # New York (su orario italiano): Verde 15:30-16:30 (930-990 min), Rosso 21:00-22:00 (1260-1320 min)
+    if 930 <= min_milano <= 990:
+        color_ny = "#4ade80"  # Verde
+    elif 1260 <= min_milano <= 1320:
+        color_ny = "#ef4444"  # Rosso
+    else:
+        color_ny = "white"
     
     col_cl1, col_cl2 = st.columns(2)
     with col_cl1:
         st.markdown(f"""
             <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
                 <b>📍 MILANO (Borsa Italiana)</b><br>
-                <span style="font-size: 1.3em; font-weight: bold;">{now_milano.strftime('%H:%M:%S')}</span>
+                <span style="font-size: 1.3em; font-weight: bold; color: {color_milano};">{now_milano.strftime('%H:%M:%S')}</span>
             </div>
         """, unsafe_allow_html=True)
     with col_cl2:
         st.markdown(f"""
             <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
                 <b>🗽 NEW YORK (Wall Street)</b><br>
-                <span style="font-size: 1.3em; font-weight: bold;">{now_ny.strftime('%H:%M:%S')}</span>
+                <span style="font-size: 1.3em; font-weight: bold; color: {color_ny};">{now_ny.strftime('%H:%M:%S')}</span>
             </div>
         """, unsafe_allow_html=True)
 
