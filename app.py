@@ -96,14 +96,18 @@ menu = st.sidebar.radio(
 # SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Tony Stark Vetrina)
 # =====================================================================
 if menu == "🏠 Home & Panoramica":
-    # CSS personalizzato per applicare lo sfondo con opacità (effetto vetrina)
+    # CSS personalizzato per applicare lo sfondo e forzare il testo bianco brillante
     st.markdown("""
         <style>
         .stApp {
-            background: linear-gradient(rgba(14, 17, 23, 0.88), rgba(14, 17, 23, 0.88)), url('tony_stark.png');
+            background: linear-gradient(rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.92)), url('tony_stark.png');
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
+        }
+        /* Forza la leggibilità di tutti i testi e titoli nella Home */
+        .stApp h1, .stApp h2, .stApp h3, .stApp p, .stApp span {
+            color: #ffffff !important;
         }
         </style>
     """, unsafe_allow_html=True)
