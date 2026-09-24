@@ -354,14 +354,14 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
 # =====================================================================
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
-    st.markdown("Monitoraggio attivo focalizzato esclusivamente su operazioni **Long** (acquisto al rialzo) per chi opera tramite Trade Republic.")
+    st.markdown("Monitoraggio attivo focalizzato esclusivamente su operazioni **Long** (acquisto al rialzo) per chi opera con piccoli capitali.")
     
     # Disclaimer Trade Republic in evidenza
     st.markdown("""
         <div style="background-color: #1f2937; padding: 15px; border-radius: 10px; border: 1px solid #374151; margin-bottom: 20px;">
-            <h4 style="color: #60a5fa; margin-top: 0;">💡 Nota Importante: Commissioni Trade Republic & Capitale Minimo</h4>
-            <p style="color: #d1d5db; margin-bottom: 5px;">• <b>Costo Commissione:</b> Trade Republic applica <b>1€ per l'acquisto</b> e <b>1€ per la vendita</b> (totale 2€ di costi fissi per completare l'operazione di round-trip).</p>
-            <p style="color: #d1d5db; margin-bottom: 0;">• <b>Regola del Guadagno Netto:</b> Affinché il profitto della vendita superi i costi fissi del broker, l'investimento deve essere calibrato correttamente in base al target percentuale stimato.</p>
+            <h4 style="color: #60a5fa; margin-top: 0;">💡 Nota Importante: Commissioni Trade Republic & Micro-Capitale</h4>
+            <p style="color: #d1d5db; margin-bottom: 5px;">• <b>Costo Commissione:</b> Trade Republic applica <b>1€ per l'acquisto</b> e <b>1€ per la vendita</b> (totale <b>2€ fissi</b> di commissioni per ogni operazione completata).</p>
+            <p style="color: #d1d5db; margin-bottom: 0;">• <b>Partire da 10€:</b> Sotto ogni segnale troverai un box colorato dedicato con il calcolo esatto per un investimento di <b>10€</b>, così vedrai subito l'impatto reale delle commissioni fisse del broker.</p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -420,15 +420,30 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
             2. **Ticker & Prezzo Attuale** (es. TSLA a 380.24)
             3. **Target % di Rialzo** (es. +0.85%)
             4. **Prezzo a cui vendere (Target Price)** (Calcola il prezzo esatto: Prezzo Attuale * (1 + Target%/100))
-            5. **Guadagno Lordo stimato su 200€ di investimento** e **Capitale Minimo consigliato** affinché il guadagno superi i costi fissi di commissione di Trade Republic (2€ totali tra acquisto e vendita).
+            5. **SIMULAZIONE MICRO-INVESTIMENTO 10€ (OBBLIGATORIO IN UN BOX COLORATO):**
+               Includi per ogni azione un blocco HTML evidenziato con uno sfondo colorato (stile card scura con bordo colorato a destra/sinistra) che calcoli ESATTAMENTE:
+               - Capitale Investito: 10,00 €
+               - Guadagno Lordo sul Target % (es. 10€ * Target%)
+               - Commissioni Fisse Trade Republic: 2,00 € (1€ acquisto + 1€ vendita)
+               - Risultato Netto Finale (Guadagno Lordo - 2€), spiegando chiaramente l'impatto delle commissioni sul piccolo capitale.
             6. **Timeframe consigliato** (es. 20 minuti) e motivazione tecnica sintetica.
+            
+            Usa rigorosamente questo formato HTML per il box da 10€ in ogni titolo:
+            <div style="background-color: #162032; padding: 12px; border-radius: 8px; border-left: 5px solid #10b981; margin: 10px 0;">
+                <b style="color: #34d399;">💎 SIMULAZIONE MICRO-INVESTIMENTO (10€):</b><br>
+                - Capitale: 10.00 €<br>
+                - Target Prezzo di Vendita: [Inserisci valore calcolato]<br>
+                - Guadagno Lordo: [Inserisci valore calcolato]<br>
+                - Commissioni fisse Trade Republic: 2.00 €<br>
+                - <b>Utile / Perdita Netto Reale: [Inserisci valore netto e breve nota]</b>
+            </div>
             """
             
             segnali_ia = get_gemini_response(prompt_sala)
-            st.markdown("### 📊 Tabella Operativa Long per Trade Republic:")
+            st.markdown("### 📊 Tabella Operativa Long & Micro-Investimenti (10€):")
             st.markdown(segnali_ia)
     else:
-        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi e vedere i segnali Long pronti.")
+        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi e vedere i segnali Long pronti con la simulazione da 10€.")
 
 # =====================================================================
 # SCHERMATA 6: ASSISTENTE IA & SEGNALI
