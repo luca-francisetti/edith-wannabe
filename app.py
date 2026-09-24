@@ -57,6 +57,17 @@ def get_gemini_response(prompt):
             
     return f"⚠️ I server di Google sono temporaneamente sovraccarichi (Errore 503). Riprova tra qualche istante. Dettaglio: {last_error}"
 
+# Funzione di supporto per lo stato RSI (Semaforo & Consiglio)
+def calcola_stato_rsi(rsi_val):
+    if np.isnan(rsi_val):
+        return "⚪ N/D", "NEUTRAL"
+    elif rsi_val < 30:
+        return "🟢 IPERVENDUTO", "COMPRA"
+    elif rsi_val > 70:
+        return "🔴 IPERCOMPRATO", "VENDI"
+    else:
+        return "🟡 NEUTRO", "HOLD"
+
 # --- 3. MENU DI NAVIGAZIONE A PIÙ SCHERMATE ---
 menu = st.sidebar.radio(
     "Seleziona Schermata:",
@@ -146,6 +157,8 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         prezzo_attuale = df['Close'].iloc[-1]
                         rsi_attuale = df['RSI'].iloc[-1]
                         
+                        stato_rsi, consiglio = calcola_stato_rsi(rsi_attuale)
+                        
                         pe_ratio = info.get('trailingPE', 'N/D')
                         eps = info.get('trailingEps', 'N/D')
                         
@@ -158,6 +171,14 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         
                         st.markdown("---")
                         st.subheader(f"📊 Dati Fondamentali: {nome_lungo}")
+                        
+                        # Box Semaforo & Consiglio in evidenza
+                        st.markdown(f"""
+                            <div style="background-color: #161b22; padding: 12px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center;">
+                                <div><b>Stato RSI:</b> <span style="font-size: 1.1em;">{stato_rsi}</span></div>
+                                <div><b>Consiglio Operativo:</b> <span style="font-size: 1.1em; font-weight: bold; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">{consiglio}</span></div>
+                            </div>
+                        """, unsafe_allow_html=True)
                         
                         c1, c2, c3, c4 = st.columns(4)
                         c1.metric("Prezzo Attuale", f"${prezzo_attuale:,.2f}")
@@ -196,6 +217,17 @@ elif menu == "📈 Grafici & Analisi Tecnica":
                 loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
                 rs = gain / loss
                 df['RSI'] = 100 - (100 / (1 + rs))
+                
+                rsi_corrente = df['RSI'].iloc[-1]
+                stato_rsi, consiglio = calcola_stato_rsi(rsi_corrente)
+                
+                # Box Semaforo & Consiglio in Analisi Tecnica
+                st.markdown(f"""
+                    <div style="background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center;">
+                        <span style="font-size: 1.1em; margin-right: 20px;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
+                        <span style="font-size: 1.1em; font-weight: bold; padding: 4px 10px; border-radius: 6px; background-color: #1f2937; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">🎯 Segnale: {consiglio}</span>
+                    </div>
+                """, unsafe_allow_html=True)
                 
                 st.subheader(f"Andamento Prezzo e Medie Mobili ({ticker_input})")
                 fig_price = go.Figure()
