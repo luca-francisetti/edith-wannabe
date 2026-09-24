@@ -2,18 +2,19 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
-import datetime
+import plotly.graph_objects as go
 from google import genai
+import os
 
-# Configurazione della pagina Streamlit
+# --- 1. CONFIGURAZIONE DELLA PAGINA ---
 st.set_page_config(
-    page_title="Edith Finanza & Trading Pro",
+    page_title="Edith - Piattaforma Finanziaria & IA",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Stile CSS personalizzato
+# Stile visivo pulito
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: #ffffff; }
@@ -21,23 +22,23 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.sidebar.title("🚀 Edith Trading & Finance")
+# --- 2. GESTIONE API KEY & GEMINI ---
+st.sidebar.title("🚀 Edith Trading Hub")
 st.sidebar.markdown("---")
 
-# Gestione API Key Gemini
 api_key = st.sidebar.text_input("Inserisci Gemini API Key", type="password", value=st.secrets.get("GEMINI_API_KEY", ""))
 
-menu = st.sidebar.radio(
-    "Navigazione",
-    ["📊 Panoramica & Mercati", "📈 Analisi Tecnica", "🔍 Scanner & Rubrica A-Z", "⚡ Sala Trading & Segnali", "💰 Dividendi & Tasse", "🏠 Immobiliare & REITs", "🤖 Assistente AI Gemini"]
-)
-
-# Funzione per interrogare Gemini con il nuovo SDK google-genai
-def get_gemini_response(prompt):
-    if not api_key:
-        return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
+client = None
+if api_key:
     try:
         client = genai.Client(api_key=api_key)
+    except Exception:
+        pass
+
+def get_gemini_response(prompt):
+    if not client:
+        return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
+    try:
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
@@ -46,17 +47,31 @@ def get_gemini_response(prompt):
     except Exception as e:
         return f"Errore di connessione a Gemini: {str(e)}"
 
-# Sezione 1: Panoramica & Mercati
-if menu == "📊 Panoramica & Mercati":
-    st.title("📊 Panoramica dei Mercati Globali")
-    st.markdown("Monitoraggio in tempo reale dei principali indici azionari e asset mondiali.")
+# --- 3. MENU DI NAVIGAZIONE A PIÙ SCHERMATE ---
+menu = st.sidebar.radio(
+    "Seleziona Schermata:",
+    [
+        "🏠 Home & Panoramica", 
+        "🔍 Rubrica A-Z & Ricerca Universale", 
+        "📈 Grafici & Analisi Tecnica", 
+        "🤖 Assistente IA & Segnali"
+    ]
+)
+
+# =====================================================================
+# SCHERMATA 1: HOME & PANORAMICA
+# =====================================================================
+if menu == "🏠 Home & Panoramica":
+    st.title("🏠 Home - Dashboard Finanziaria")
+    st.markdown("Benvenuto nella tua applicazione di monitoraggio e analisi finanziaria assistita da IA.")
     
-    tickers = {"S&P 500": "^GSPC", "NASDAQ": "^IXIC", "FTSE MIB": "FTSEMIB.MI", "DAX": "^GDAXI", "Oro": "GC=F", "Bitcoin": "BTC-USD"}
+    st.subheader("📊 Sintesi Indici Globali")
+    indici = {"S&P 500": "^GSPC", "NASDAQ": "^IXIC", "FTSE MIB": "FTSEMIB.MI", "Oro": "GC=F", "Bitcoin": "BTC-USD"}
     
-    cols = st.columns(3)
+    cols = st.columns(len(indici))
     idx = 0
-    for name, symbol in tickers.items():
-        with cols[idx % 3]:
+    for name, symbol in indici.items():
+        with cols[idx]:
             try:
                 data = yf.Ticker(symbol).history(period="5d")
                 if not data.empty:
@@ -67,32 +82,99 @@ if menu == "📊 Panoramica & Mercati":
                 else:
                     st.metric(label=name, value="N/D")
             except Exception:
-                st.metric(label=name, value="Errore dati")
+                st.metric(label=name, value="Errore")
         idx += 1
-        
-    st.markdown("---")
-    st.subheader("💡 Commento di Mercato AI")
-    if st.button("Genera Analisi Rapida di Mercato"):
-        with st.spinner("Analisi in corso con Gemini..."):
-            prompt = "Fai un'analisi macroeconomica rapida e professionale dei mercati finanziari globali attuali."
-            analysis = get_gemini_response(prompt)
-            st.info(analysis)
 
-# Sezione 2: Analisi Tecnica
-elif menu == "📈 Analisi Tecnica":
-    st.title("📈 Analisi Tecnica Avanzata")
+    st.markdown("---")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per passare alla **Rubrica A-Z** e cercare qualsiasi azienda al mondo per nome (es. Coca-Cola, Apple, Enel) senza bisogno di conoscere i ticker.")
+
+# =====================================================================
+# SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
+# =====================================================================
+elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
+    st.title("🔍 Rubrica A-Z & Ricerca Azienda Globale")
+    st.markdown("Digita il nome di **qualsiasi azienda al mondo** (es. *Coca-Cola*, *Tesla*, *Ferrari*, *Enel*, *Apple*) nella barra sottostante:")
+
+    query_testo = st.text_input("Cerca nome azienda o parola chiave:", value="Coca-Cola")
+
+    if query_testo:
+        with st.spinner("Ricerca globale in corso su Yahoo Finance..."):
+            try:
+                ricerca = yf.Search(query_testo, max_results=10)
+                quotes = ricerca.quotes
+                
+                if not quotes:
+                    st.warning("Nessuna azienda trovata con questo nome. Prova a digitare il nome in inglese o la sigla esatta.")
+                else:
+                    opzioni_mappate = {}
+                    for q in quotes:
+                        simbolo = q.get('symbol')
+                        nome = q.get('shortname', q.get('longname', simbolo))
+                        borsa = q.get('exchange', 'Mercato')
+                        etichetta = f"{nome} ({simbolo}) - [{borsa}]"
+                        opzioni_mappate[etichetta] = simbolo
+                    
+                    scelta_utente = st.selectbox("Seleziona il risultato corretto dalla ricerca:", list(opzioni_mappate.keys()))
+                    ticker_selezionato = opzioni_mappate[scelta_utente]
+                    
+                    st.success(f"Ticker selezionato: **{ticker_selezionato}**")
+                    
+                    # Estrazione Dati Fondamentali e Storici
+                    stock = yf.Ticker(ticker_selezionato)
+                    info = stock.info
+                    df = stock.history(period="1y")
+                    
+                    if not df.empty:
+                        # Calcolo RSI (14)
+                        delta = df['Close'].diff()
+                        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+                        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+                        rs = gain / loss
+                        df['RSI'] = 100 - (100 / (1 + rs))
+                        
+                        prezzo_attuale = df['Close'].iloc[-1]
+                        rsi_attuale = df['RSI'].iloc[-1]
+                        
+                        pe_ratio = info.get('trailingPE', 'N/D')
+                        eps = info.get('trailingEps', 'N/D')
+                        div_yield = info.get('dividendYield', None)
+                        div_yield_str = f"{div_yield * 100:.2f}%" if div_yield else "N/D"
+                        settore = info.get('sector', 'N/D')
+                        nome_lungo = info.get('longName', ticker_selezionato)
+                        
+                        st.markdown("---")
+                        st.subheader(f"📊 Dati Fondamentali: {nome_lungo}")
+                        
+                        c1, c2, c3, c4 = st.columns(4)
+                        c1.metric("Prezzo Attuale", f"${prezzo_attuale:,.2f}")
+                        c2.metric("RSI (14)", f"{rsi_attuale:.1f}" if not np.isnan(rsi_attuale) else "N/D")
+                        c3.metric("P/E (Prezzo/Utile)", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else "N/D")
+                        c4.metric("EPS (Utile per azione)", f"{eps:.2f}" if isinstance(eps, (int, float)) else "N/D")
+                        
+                        st.markdown(f"**Dividend Yield:** {div_yield_str} | **Settore:** {settore}")
+                        
+                        st.write("### Storico Prezzi (Ultimo Anno)")
+                        st.line_chart(df['Close'])
+                    else:
+                        st.error("Impossibile scaricare i dati storici per questo titolo.")
+            except Exception as e:
+                st.error(f"Errore durante la ricerca: {e}")
+
+# =====================================================================
+# SCHERMATA 3: GRAFICI & ANALISI TECNICA
+# =====================================================================
+elif menu == "📈 Grafici & Analisi Tecnica":
+    st.title("📈 Analisi Tecnica con Medie Mobili e RSI")
     
-    ticker_input = st.text_input("Inserisci il Ticker Yahoo Finance (es. AAPL, TSLA, ENEL.MI, BTC-USD)", value="AAPL").upper()
-    period = st.selectbox("Periodo temporale", ["1mo", "3mo", "6mo", "1y", "2y", "5y"], index=3)
+    ticker_input = st.text_input("Inserisci il Ticker esatto (es. AAPL, KO, TSLA, ENEL.MI)", value="KO").upper()
+    periodo = st.selectbox("Seleziona Periodo", ["3mo", "6mo", "1y", "2y", "5y"], index=2)
     
     if ticker_input:
         try:
             stock = yf.Ticker(ticker_input)
-            df = stock.history(period=period)
+            df = stock.history(period=periodo)
             
-            if df.empty:
-                st.error("Nessun dato trovato per questo ticker.")
-            else:
+            if not df.empty:
                 df['SMA_50'] = df['Close'].rolling(window=50).mean()
                 df['SMA_200'] = df['Close'].rolling(window=200).mean()
                 
@@ -102,103 +184,35 @@ elif menu == "📈 Analisi Tecnica":
                 rs = gain / loss
                 df['RSI'] = 100 - (100 / (1 + rs))
                 
-                st.subheader(f"Grafico Prezzo & Medie Mobili ({ticker_input})")
-                st.line_chart(df[['Close', 'SMA_50', 'SMA_200']])
+                st.subheader(f"Andamento Prezzo e Medie Mobili ({ticker_input})")
+                fig_price = go.Figure()
+                fig_price.add_trace(go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Prezzo Chiusura', line=dict(color='blue')))
+                fig_price.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], mode='lines', name='SMA 50', line=dict(color='orange')))
+                fig_price.add_trace(go.Scatter(x=df.index, y=df['SMA_200'], mode='lines', name='SMA 200', line=dict(color='red')))
+                st.plotly_chart(fig_price, use_container_width=True)
                 
                 st.subheader("Indice di Forza Relativa (RSI 14)")
-                st.line_chart(df['RSI'])
-                
-                latest_rsi = df['RSI'].iloc[-1]
-                st.metric("RSI Attuale", f"{latest_rsi:.2f}", "Ipervenduto < 30 | Ipercomprato > 70" if not np.isnan(latest_rsi) else "")
+                fig_rsi = go.Figure()
+                fig_rsi.add_trace(go.Scatter(x=df.index, y=df['RSI'], mode='lines', name='RSI', line=dict(color='purple')))
+                fig_rsi.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Ipercomprato (70)")
+                fig_rsi.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Ipervenduto (30)")
+                st.plotly_chart(fig_rsi, use_container_width=True)
+            else:
+                st.error("Nessun dato trovato per questo ticker.")
         except Exception as e:
-            st.error(f"Errore nel recupero dei dati: {e}")
+            st.error(f"Errore: {e}")
 
-# Sezione 3: Scanner & Rubrica A-Z
-elif menu == "🔍 Scanner & Rubrica A-Z":
-    st.title("🔍 Scanner Titoli & Rubrica A-Z")
-    st.markdown("Esplora e filtra un elenco di azioni popolari con metriche chiave.")
+# =====================================================================
+# SCHERMATA 4: ASSISTENTE IA & SEGNALI
+# =====================================================================
+elif menu == "🤖 Assistente IA & Segnali":
+    st.title("🤖 Assistente IA Gemini & Analisi Operativa")
+    st.markdown("Fai domande di finanza o chiedi un'analisi intelligente su un titolo.")
     
-    default_watchlist = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "ENEL.MI", "ISP.MI", "UCG.MI", "BTC-USD"]
-    selected_stock = st.selectbox("Seleziona dalla Rubrica:", default_watchlist)
+    domanda = st.text_area("Scrivi la tua richiesta o il titolo da analizzare:", value="Dammi un parere generale sull'investimento in azioni a dividendo alto.")
     
-    if selected_stock:
-        t = yf.Ticker(selected_stock)
-        info = t.info
-        st.write(f"### {info.get('longName', selected_stock)} ({selected_stock})")
-        
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Prezzo Attuale", f"{info.get('currentPrice', info.get('regularMarketPrice', 'N/D'))}")
-        col2.metric("Capitalizzazione", f"{info.get('marketCap', 'N/D'):,}" if isinstance(info.get('marketCap'), (int, float)) else "N/D")
-        col3.metric("Settore", f"{info.get('sector', 'N/D')}")
-        
-        st.write("Descrizione:")
-        st.write(info.get('longBusinessSummary', 'Nessuna descrizione disponibile.'))
-
-# Sezione 4: Sala Trading & Segnali
-elif menu == "⚡ Sala Trading & Segnali":
-    st.title("⚡ Sala Trading & Segnali Operativi")
-    st.markdown("Generazione di segnali di trading basati su indicatori quantitativi e validazione AI.")
-    
-    trade_ticker = st.text_input("Ticker per Segnale di Trading", value="TSLA").upper()
-    if st.button("Genera Segnale di Trading"):
-        with st.spinner("Elaborazione indicatori e segnale AI..."):
-            try:
-                df = yf.Ticker(trade_ticker).history(period="6mo")
-                close = df['Close'].iloc[-1]
-                sma50 = df['Close'].rolling(50).mean().iloc[-1]
-                sma200 = df['Close'].rolling(200).mean().iloc[-1]
-                
-                prompt = f"Analizza il titolo {trade_ticker} con prezzo attuale {close}, SMA 50 a {sma50}, e SMA 200 a {sma200}. Fornisci un segnale chiaro (BUY, SELL, HOLD) con motivazione tecnica."
-                signal_analysis = get_gemini_response(prompt)
-                
-                st.success("Analisi completata!")
-                st.write(signal_analysis)
-            except Exception as e:
-                st.error(f"Errore: {e}")
-
-# Sezione 5: Dividendi & Tasse
-elif menu == "💰 Dividendi & Tasse":
-    st.title("💰 Calcolatore Dividendi & Tasse")
-    st.markdown("Calcola il rendimento netto dei dividendi considerando la tassazione sulle rendite finanziarie (es. aliquota 26%).")
-    
-    capital = st.number_input("Capitale Investito (€)", value=10000.0, step=1000.0)
-    div_yield = st.slider("Dividend Yield annuo (%)", min_value=0.0, max_value=15.0, value=4.5, step=0.1)
-    tax_rate = st.slider("Aliquota Fiscale / Tasse (%)", min_value=0.0, max_value=50.0, value=26.0, step=0.5)
-    
-    annual_gross = capital * (div_yield / 100)
-    tax_amount = annual_gross * (tax_rate / 100)
-    annual_net = annual_gross - tax_amount
-    
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Dividendo Lordo Annuo", f"€ {annual_gross:,.2f}")
-    col2.metric("Tasse Trattenute", f"€ {tax_amount:,.2f}")
-    col3.metric("Dividendo Netto Annuo", f"€ {annual_net:,.2f}")
-
-# Sezione 6: Immobiliare & REITs
-elif menu == "🏠 Immobiliare & REITs":
-    st.title("🏠 Immobiliare & REITs Globali")
-    st.markdown("Analisi dei principali fondi di investimento immobiliare (REITs) come Realty Income (O), Simon Property Group (SPG), ecc.")
-    
-    reit_ticker = st.selectbox("Seleziona REIT", ["O", "SPG", "PLD", "VICI"])
-    reit_data = yf.Ticker(reit_ticker)
-    info = reit_data.info
-    
-    st.write(f"### {info.get('longName', reit_ticker)}")
-    st.metric("Prezzo", f"{info.get('currentPrice', 'N/D')}")
-    st.metric("Dividend Yield", f"{info.get('dividendYield', 0)*100:.2f}%" if info.get('dividendYield') else "N/D")
-    st.write(info.get('longBusinessSummary', ''))
-
-# Sezione 7: Assistente AI Gemini
-elif menu == "🤖 Assistente AI Gemini":
-    st.title("🤖 Chat Assistente Finanziario IA")
-    st.markdown("Fai qualsiasi domanda di finanza, mercati, strategie o analisi di bilancio a Gemini.")
-    
-    user_query = st.text_area("Scrivi la tua domanda qui:", placeholder="Es. Quali sono le differenze tra ETF a capitalizzazione e a distribuzione?")
-    if st.button("Invia Domanda"):
-        if user_query:
-            with st.spinner("Gemini sta elaborando la risposta..."):
-                answer = get_gemini_response(user_query)
-                st.write("### Risposta:")
-                st.write(answer)
-        else:
-            st.warning("Inserisci una domanda prima di inviare.")
+    if st.button("Chiedi a Gemini"):
+        with st.spinner("L'intelligenza artificiale sta elaborando la risposta..."):
+            risposta = get_gemini_response(domanda)
+            st.markdown("### Risposta di Gemini:")
+            st.write(risposta)
