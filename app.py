@@ -22,7 +22,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. GESTIONE API KEY & GEMINI ---
+# --- 2. GESTIONE API KEY & GEMINI CON FALLBACK AUTOMATICO ---
 st.sidebar.title("🚀 Edith Trading Hub")
 st.sidebar.markdown("---")
 
@@ -38,14 +38,23 @@ if api_key:
 def get_gemini_response(prompt):
     if not client:
         return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
-    try:
-        response = client.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=prompt,
-        )
-        return response.text
-    except Exception as e:
-        return f"Errore di connessione a Gemini: {str(e)}"
+    
+    # Lista di modelli con fallback automatico in caso di errore 503 o traffico elevato
+    models_to_try = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-2.5-flash"]
+    
+    last_error = ""
+    for model_name in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            return response.text
+        except Exception as e:
+            last_error = str(e)
+            continue
+            
+    return f"⚠️ I server di Google sono temporaneamente sovraccarichi (Errore 503). Riprova tra qualche istante. Dettaglio: {last_error}"
 
 # --- 3. MENU DI NAVIGAZIONE A PIÙ SCHERMATE ---
 menu = st.sidebar.radio(
@@ -222,7 +231,6 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
             commissione_tr = st.number_input("Commissione Trade Republic per operazione (€)", min_value=0.0, value=1.0, step=0.5)
             ritenuta_estera_pct = st.selectbox("Ritenuta alla fonte estera (es. W-8BEN per USA)", [15.0, 0.0, 25.0, 30.0], index=0)
 
-        # Motore di calcolo fiscale
         dividendo_lordo = capitale * (yield_input / 100.0)
         base_netta_lorda = max(0.0, dividendo_lordo)
         
@@ -258,11 +266,10 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 div_raw = inf.get('dividendYield', 0)
                 div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
                 
-                # Calcolo netto su 100 euro
                 lordo_100 = 100.0 * (div_yield / 100.0)
                 tassa_est = lordo_100 * 0.15 
                 tassa_ita = max(0.0, (lordo_100 * 0.26) - tassa_est)
-                netto_100 = lordo_100 - tassa_est - tassa_ita - 1.0 # 1 euro commissione TR
+                netto_100 = lordo_100 - tassa_est - tassa_ita - 1.0 
                 
                 dati_dividendi.append({
                     "Ticker": t,
