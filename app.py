@@ -4,6 +4,7 @@ import numpy as np
 import yfinance as yf
 import plotly.graph_objects as go
 from google import genai
+from datetime import datetime
 import os
 
 # --- 1. CONFIGURAZIONE DELLA PAGINA ---
@@ -63,6 +64,7 @@ menu = st.sidebar.radio(
         "🔍 Rubrica A-Z & Ricerca Universale", 
         "📈 Grafici & Analisi Tecnica", 
         "💰 Cantiere Dividendi & Tasse",
+        "🚨 Sala Segnali (Day Trading)",
         "🤖 Assistente IA & Segnali"
     ]
 )
@@ -95,7 +97,7 @@ if menu == "🏠 Home & Panoramica":
         idx += 1
 
     st.markdown("---")
-    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi** o l'Assistente IA.")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi** o la **Sala Segnali**.")
 
 # =====================================================================
 # SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
@@ -341,7 +343,6 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
 
         if dati_high_yield:
             df_hy = pd.DataFrame(dati_high_yield)
-            # Ordinamento automatico dal rendimento più alto al più basso
             df_hy = df_hy.sort_values(by="Dividend Yield (%)", ascending=False)
             st.dataframe(df_hy, use_container_width=True)
 
@@ -349,7 +350,75 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         st.warning("⚠️ **Nota sul Rischio Elevato:** I titoli con rendimenti percentuali molto alti richiedono cautela estrema. Spesso un dividend yield elevato è il sintomo di un prezzo azionario in forte calo o di una scarsa sostenibilità dei flussi di cassa futuri.")
 
 # =====================================================================
-# SCHERMATA 5: ASSISTENTE IA & SEGNALI
+# SCHERMATA 5: SALA SEGNALI (DAY TRADING)
+# =====================================================================
+elif menu == "🚨 Sala Segnali (Day Trading)":
+    st.title("🚨 Sala Segnali - Day Trading & Volatilità Istantanea")
+    st.markdown("Monitoraggio attivo focalizzato sulle finestre ad alta volatilità: **Apertura Europea (9:05 - 10:00)** e **Apertura Wall Street (15:30 - 16:30)**.")
+    
+    now = datetime.now()
+    ora_formattata = now.strftime('%H:%M')
+    giorno_settimana = now.weekday() # 0-4 = Lun-Ven
+    ora_num = now.hour + now.minute / 60.0
+    
+    in_finestra_eu = (9.05 <= ora_num <= 10.0) and (giorno_settimana < 5)
+    in_finestra_us = (15.5 <= ora_num <= 16.5) and (giorno_settimana < 5)
+    
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        st.metric("Orario Corrente", ora_formattata)
+    with col_t2:
+        if in_finestra_eu or in_finestra_us:
+            st.success("🟢 MERCATO IN FASCIA CALDA (Alta Volatilità)")
+        else:
+            st.info("🟡 Mercato in fase di attesa o fuori dalle finestre principali di Day Trading")
+            
+    st.markdown("---")
+    st.subheader("⚡ Top 5 Azioni Calde del Momento (Scansione Automatica IA)")
+    st.markdown("Clicca sul pulsante per scansionare i micro-movimenti a 5 minuti e i volumi anomali dei principali titoli globali:")
+
+    if st.button("🚀 Scansiona Mercati e Genera Top 5 Segnali Ora", type="primary"):
+        with st.spinner("L'intelligenza artificiale sta analizzando i volumi intraday (5m)..."):
+            paniere_day = ["AAPL", "TSLA", "NVDA", "MSFT", "AMZN", "ENEL.MI", "UCG.MI", "RACE.MI", "GOOGL", "META"]
+            dati_sintesi_intraday = []
+            
+            for t in paniere_day:
+                try:
+                    tk = yf.Ticker(t)
+                    df_5m = tk.history(period="1d", interval="5m")
+                    if not df_5m.empty and len(df_5m) > 5:
+                        ultimo_prezzo = df_5m['Close'].iloc[-1]
+                        apertura_giornata = df_5m['Open'].iloc[0]
+                        variazione_pct = ((ultimo_prezzo - apertura_giornata) / apertura_giornata) * 100
+                        vol_medio = df_5m['Volume'].mean()
+                        vol_ultimo = df_5m['Volume'].iloc[-1]
+                        spike = "🔥 SPIKE VOLUMI" if vol_medio > 0 and vol_ultimo > (vol_medio * 1.5) else "Normale"
+                        
+                        dati_sintesi_intraday.append(f"- Ticker: {t} | Variazione Oggi: {variazione_pct:+.2f}% | Prezzo: {ultimo_prezzo:.2f} | Stato Volumi: {spike}")
+                except Exception:
+                    pass
+            
+            prompt_sala = f"""
+            Agisci come un trader quantitativo professionista ed esperto di Day Trading a brevissimo termine (operazioni da 15-30 minuti).
+            Analizza questi dati intraday in tempo reale:
+            {chr(10).join(dati_sintesi_intraday)}
+            
+            Seleziona rigorosamente le **Top 5 azioni** più promettenti del momento per operatività di day trading.
+            Per ciascuna azione fornisci:
+            1. Indicazione chiara con emoji (es. 🟢 COMPRA SUBITO o 🔴 VENDI ORA).
+            2. Ticker e motivazione tecnica basata sui dati forniti (variazione e volumi).
+            3. Target di profitto stimato e timeframe (es. Target +1.5% in 20 minuti).
+            Scrivi in modo diretto, professionale e ad alto impatto visivo.
+            """
+            
+            segnali_ia = get_gemini_response(prompt_sala)
+            st.markdown("### 📊 Report Operativo in Tempo Reale:")
+            st.markdown(segnali_ia)
+    else:
+        st.info("👆 Clicca sul pulsante sopra per avviare l'analisi istantanea della Sala Segnali.")
+
+# =====================================================================
+# SCHERMATA 6: ASSISTENTE IA & SEGNALI
 # =====================================================================
 elif menu == "🤖 Assistente IA & Segnali":
     st.title("🤖 Assistente IA Gemini & Analisi Operativa")
