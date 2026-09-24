@@ -40,7 +40,7 @@ def get_gemini_response(prompt):
         return "⚠️ Inserisci la tua API Key di Gemini nella barra laterale per attivare l'Intelligenza Artificiale."
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.6-flash",
             contents=prompt,
         )
         return response.text
@@ -136,8 +136,11 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         
                         pe_ratio = info.get('trailingPE', 'N/D')
                         eps = info.get('trailingEps', 'N/D')
-                        div_yield = info.get('dividendYield', None)
-                        div_yield_str = f"{div_yield * 100:.2f}%" if div_yield else "N/D"
+                        
+                        div_raw = info.get('dividendYield', 0)
+                        div_yield_val = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
+                        div_yield_str = f"{div_yield_val:.2f}%" if div_yield_val > 0 else "N/D"
+                        
                         settore = info.get('sector', 'N/D')
                         nome_lungo = info.get('longName', ticker_selezionato)
                         
@@ -214,21 +217,16 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         col_c1, col_c2 = st.columns(2)
         with col_c1:
             capitale = st.number_input("Capitale Investito (€)", min_value=10.0, value=100.0, step=10.0)
-            yield_input = st.number_input("Dividend Yield Annuo (%)", min_value=0.0, max_value=30.0, value=5.5, step=0.1)
+            yield_input = st.number_input("Dividend Yield Annuo (%)", min_value=0.0, max_value=30.0, value=3.5, step=0.1)
         with col_c2:
             commissione_tr = st.number_input("Commissione Trade Republic per operazione (€)", min_value=0.0, value=1.0, step=0.5)
             ritenuta_estera_pct = st.selectbox("Ritenuta alla fonte estera (es. W-8BEN per USA)", [15.0, 0.0, 25.0, 30.0], index=0)
 
         # Motore di calcolo fiscale
         dividendo_lordo = capitale * (yield_input / 100.0)
-        # Sottraiamo la commissione d'ingresso Trade Republic dall'investimento effettivo o lordo
         base_netta_lorda = max(0.0, dividendo_lordo)
         
-        # Tassazione estera (es. 15% USA)
         tassa_estera = base_netta_lorda * (ritenuta_estera_pct / 100.0)
-        
-        # Tassazione italiana (26% totale, ma con credito d'imposta per la ritenuta estera già pagata)
-        # In regime amministrato italiano, l'aliquota finale complessiva sulle rendite finanziarie è 26%.
         tassa_totale_dovuta = base_netta_lorda * 0.26
         tassa_italia_aggiuntiva = max(0.0, tassa_totale_dovuta - tassa_estera)
         
@@ -241,13 +239,12 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         res3.metric("Tasse (Estera + ITA 26%)", f"€ {tassa_estera + tassa_italia_aggiuntiva:.2f}")
         res4.metric("Dividendo Netto Reale", f"€ {dividendo_netto:.2f}", delta=f"{((dividendo_netto/capitale)*100):.2f}% effettivo")
 
-        st.info("ℹ️ **Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia. Non dovrai impazzire con la dichiarazione dei redditi per questi proventi.")
+        st.info("ℹ️ **Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia.")
 
     with tab2:
         st.subheader("🏆 Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
         st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione (inclusi i mensili come Realty Income, Main Street Capital e STAG Industrial).")
 
-        # Lista di titoli di riferimento focalizzati sui dividendi
         top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
         
         dati_dividendi = []
@@ -257,15 +254,13 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 inf = tk.info
                 nome = inf.get('longName', t)
                 prezzo = inf.get('currentPrice', inf.get('regularMarketPrice', 0))
-                div_yield = inf.get('dividendYield', 0)
-                if div_yield is None:
-                    div_yield = 0.0
-                else:
-                    div_yield = div_yield * 100
+                
+                div_raw = inf.get('dividendYield', 0)
+                div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
                 
                 # Calcolo netto su 100 euro
                 lordo_100 = 100.0 * (div_yield / 100.0)
-                tassa_est = lordo_100 * 0.15 #assumiamo W-8BEN 15%
+                tassa_est = lordo_100 * 0.15 
                 tassa_ita = max(0.0, (lordo_100 * 0.26) - tassa_est)
                 netto_100 = lordo_100 - tassa_est - tassa_ita - 1.0 # 1 euro commissione TR
                 
@@ -311,5 +306,7 @@ elif menu == "🤖 Assistente IA & Segnali":
     if st.button("Chiedi a Gemini"):
         with st.spinner("L'intelligenza artificiale sta elaborando la risposta..."):
             risposta = get_gemini_response(domanda)
+            st.markdown("### Risposta di Gemini:")
+            st.write(risposta)
             st.markdown("### Risposta di Gemini:")
             st.write(risposta)
