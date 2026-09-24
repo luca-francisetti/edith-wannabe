@@ -54,6 +54,7 @@ menu = st.sidebar.radio(
         "🏠 Home & Panoramica", 
         "🔍 Rubrica A-Z & Ricerca Universale", 
         "📈 Grafici & Analisi Tecnica", 
+        "💰 Cantiere Dividendi & Tasse",
         "🤖 Assistente IA & Segnali"
     ]
 )
@@ -86,7 +87,7 @@ if menu == "🏠 Home & Panoramica":
         idx += 1
 
     st.markdown("---")
-    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per passare alla **Rubrica A-Z** e cercare qualsiasi azienda al mondo per nome (es. Coca-Cola, Apple, Enel) senza bisogno di conoscere i ticker.")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi** o l'Assistente IA.")
 
 # =====================================================================
 # SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
@@ -119,13 +120,11 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                     
                     st.success(f"Ticker selezionato: **{ticker_selezionato}**")
                     
-                    # Estrazione Dati Fondamentali e Storici
                     stock = yf.Ticker(ticker_selezionato)
                     info = stock.info
                     df = stock.history(period="1y")
                     
                     if not df.empty:
-                        # Calcolo RSI (14)
                         delta = df['Close'].diff()
                         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
@@ -152,7 +151,6 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         c4.metric("EPS (Utile per azione)", f"{eps:.2f}" if isinstance(eps, (int, float)) else "N/D")
                         
                         st.markdown(f"**Dividend Yield:** {div_yield_str} | **Settore:** {settore}")
-                        
                         st.write("### Storico Prezzi (Ultimo Anno)")
                         st.line_chart(df['Close'])
                     else:
@@ -203,7 +201,106 @@ elif menu == "📈 Grafici & Analisi Tecnica":
             st.error(f"Errore: {e}")
 
 # =====================================================================
-# SCHERMATA 4: ASSISTENTE IA & SEGNALI
+# SCHERMATA 4: CANTIERE DIVIDENDI & TASSE (TRADE REPUBLIC)
+# =====================================================================
+elif menu == "💰 Cantiere Dividendi & Tasse":
+    st.title("💰 Cantiere Dividendi & Motore Fiscale (Trade Republic)")
+    st.markdown("Calcola al centesimo il rendimento netto dei dividendi considerando commissioni, ritenuta estera (es. W-8BEN USA al 15%) e tassazione italiana del 26% in regime amministrato.")
+
+    tab1, tab2 = st.tabs(["🧮 Calcolatore Singolo Investimento", "🏆 Classifica Top 10 Dividendi & Trappole IA"])
+
+    with tab1:
+        st.subheader("Simulatore Rendimento Netto su Capitale Investito")
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            capitale = st.number_input("Capitale Investito (€)", min_value=10.0, value=100.0, step=10.0)
+            yield_input = st.number_input("Dividend Yield Annuo (%)", min_value=0.0, max_value=30.0, value=5.5, step=0.1)
+        with col_c2:
+            commissione_tr = st.number_input("Commissione Trade Republic per operazione (€)", min_value=0.0, value=1.0, step=0.5)
+            ritenuta_estera_pct = st.selectbox("Ritenuta alla fonte estera (es. W-8BEN per USA)", [15.0, 0.0, 25.0, 30.0], index=0)
+
+        # Motore di calcolo fiscale
+        dividendo_lordo = capitale * (yield_input / 100.0)
+        # Sottraiamo la commissione d'ingresso Trade Republic dall'investimento effettivo o lordo
+        base_netta_lorda = max(0.0, dividendo_lordo)
+        
+        # Tassazione estera (es. 15% USA)
+        tassa_estera = base_netta_lorda * (ritenuta_estera_pct / 100.0)
+        
+        # Tassazione italiana (26% totale, ma con credito d'imposta per la ritenuta estera già pagata)
+        # In regime amministrato italiano, l'aliquota finale complessiva sulle rendite finanziarie è 26%.
+        tassa_totale_dovuta = base_netta_lorda * 0.26
+        tassa_italia_aggiuntiva = max(0.0, tassa_totale_dovuta - tassa_estera)
+        
+        dividendo_netto = base_netta_lorda - tassa_estera - tassa_italia_aggiuntiva - commissione_tr
+
+        st.markdown("---")
+        res1, res2, res3, res4 = st.columns(4)
+        res1.metric("Dividendo Lordo", f"€ {dividendo_lordo:.2f}")
+        res2.metric("Commissioni TR", f"€ {commissione_tr:.2f}")
+        res3.metric("Tasse (Estera + ITA 26%)", f"€ {tassa_estera + tassa_italia_aggiuntiva:.2f}")
+        res4.metric("Dividendo Netto Reale", f"€ {dividendo_netto:.2f}", delta=f"{((dividendo_netto/capitale)*100):.2f}% effettivo")
+
+        st.info("ℹ️ **Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia. Non dovrai impazzire con la dichiarazione dei redditi per questi proventi.")
+
+    with tab2:
+        st.subheader("🏆 Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
+        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione (inclusi i mensili come Realty Income, Main Street Capital e STAG Industrial).")
+
+        # Lista di titoli di riferimento focalizzati sui dividendi
+        top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
+        
+        dati_dividendi = []
+        for t in top_div_tickers:
+            try:
+                tk = yf.Ticker(t)
+                inf = tk.info
+                nome = inf.get('longName', t)
+                prezzo = inf.get('currentPrice', inf.get('regularMarketPrice', 0))
+                div_yield = inf.get('dividendYield', 0)
+                if div_yield is None:
+                    div_yield = 0.0
+                else:
+                    div_yield = div_yield * 100
+                
+                # Calcolo netto su 100 euro
+                lordo_100 = 100.0 * (div_yield / 100.0)
+                tassa_est = lordo_100 * 0.15 #assumiamo W-8BEN 15%
+                tassa_ita = max(0.0, (lordo_100 * 0.26) - tassa_est)
+                netto_100 = lordo_100 - tassa_est - tassa_ita - 1.0 # 1 euro commissione TR
+                
+                dati_dividendi.append({
+                    "Ticker": t,
+                    "Nome": nome,
+                    "Prezzo ($/€)": prezzo,
+                    "Dividend Yield (%)": round(div_yield, 2),
+                    "Netto su 100€ (€)": round(max(0.0, netto_100), 2)
+                })
+            except Exception:
+                pass
+
+        if dati_dividendi:
+            df_div = pd.DataFrame(dati_dividendi)
+            st.dataframe(df_div, use_container_width=True)
+
+        st.markdown("---")
+        st.subheader("🤖 Analisi IA 'Dividend Trap' (Trappola da Dividendo)")
+        st.markdown("Se un'azienda offre un dividendo superiore all'8-10%, spesso nasconde problemi di bilancio o un crollo del titolo. Chiedi a Gemini di verificare un titolo specifico:")
+        
+        titolo_da_verificare = st.text_input("Inserisci Ticker da analizzare per il rischio trappola:", value="MO")
+        if st.button("Esegui Controllo Trappola Dividendo"):
+            with st.spinner("L'intelligenza artificiale sta esaminando la sostenibilità del dividendo..."):
+                prompt = f"""
+                Analizza il titolo azionario {titolo_da_verificare} dal punto di vista della sostenibilità del suo dividendo. 
+                Verifica se il dividend yield elevato rappresenta una 'trappola da dividendo' (dividend trap) dovuta a crollo del business, debito eccessivo o payout ratio insostenibile, oppure se è un dividendo sicuro e solido. 
+                Fornisci un verdetto chiaro e motivato.
+                """
+                parere_ia = get_gemini_response(prompt)
+                st.markdown("### Verdetto IA sulla sostenibilità:")
+                st.write(parere_ia)
+
+# =====================================================================
+# SCHERMATA 5: ASSISTENTE IA & SEGNALI
 # =====================================================================
 elif menu == "🤖 Assistente IA & Segnali":
     st.title("🤖 Assistente IA Gemini & Analisi Operativa")
