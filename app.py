@@ -187,14 +187,14 @@ elif menu == "🔍 Rubrica A-Z & Scanner":
     try:
         t_obj = yf.Ticker(ticker_scelto)
         info = t_obj.info
-         prezzo_attuale = info.get('currentPrice', info.get('regularMarketPrice', 0))
-         pe_ratio = info.get('trailingPE', 'N/D')
-         eps = info.get('trailingEps', 'N/D')
-         div_yield = info.get('dividendYield', 0)
-         if div_yield:
-             div_yield_str = f"{div_yield * 100:.2f}%"
-         else:
-             div_yield_str = "N/D / Assente"
+        prezzo_attuale = info.get('currentPrice', info.get('regularMarketPrice', 0))
+        pe_ratio = info.get('trailingPE', 'N/D')
+        eps = info.get('trailingEps', 'N/D')
+        div_yield = info.get('dividendYield', 0)
+        if div_yield:
+            div_yield_str = f"{div_yield * 100:.2f}%"
+        else:
+            div_yield_str = "N/D / Assente"
     except:
         prezzo_attuale, pe_ratio, eps, div_yield_str = "N/D", "N/D", "N/D", "N/D"
 
