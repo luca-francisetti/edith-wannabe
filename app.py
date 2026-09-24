@@ -128,7 +128,7 @@ if menu == "🏠 Home & Panoramica":
                     response = client.models.generate_content(model="gemini-1.5-flash", contents=prompt)
                     st.success(response.text)
                 except Exception as e:
-    st.error(f"Errore di comunicazione: {e}")
+                    st.error(f"Errore di comunicazione: {e}")
     else:
         st.warning("Inserisci la chiave API di Gemini nei Secrets di Streamlit per abilitare l'IA.")
 
