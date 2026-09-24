@@ -3,6 +3,7 @@ from PIL import Image
 import os
 import yfinance as yf
 import pandas as pd
+import numpy as np  # <-- AGGIUNGI QUESTA RIGA QUI
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from google import genai
