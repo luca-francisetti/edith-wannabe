@@ -8,7 +8,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import os
 
-# --- 1. CONFIGURAZIONE DELLA PAGINA ---
+# --- 1. CONFIGURAZIONE DELLA PAGINA & STILE BLU NAVY ---
 st.set_page_config(
     page_title="Edith - Piattaforma Finanziaria & IA",
     page_icon="📈",
@@ -16,11 +16,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Stile visivo pulito
+# Stile visivo con metriche in Blu Navy e testo bianco ad alto contrasto
 st.markdown("""
     <style>
     .main { background-color: #0e1117; color: #ffffff; }
-    .stMetric { background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; }
+    .stMetric { 
+        background-color: #1e3a8a !important; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border: 1px solid #3b82f6 !important; 
+    }
+    .stMetric label { color: #93c5fd !important; font-weight: 600; font-size: 0.95em; }
+    .stMetric [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: bold; }
+    .stMetric [data-testid="stMetricDelta"] { color: #ffffff !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -172,11 +180,11 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         st.markdown("---")
                         st.subheader(f"📊 Dati Fondamentali: {nome_lungo}")
                         
-                        # Box Semaforo & Consiglio in evidenza
+                        # Box Semaforo & Consiglio in Blu Navy con testo bianco
                         st.markdown(f"""
-                            <div style="background-color: #161b22; padding: 12px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center;">
-                                <div><b>Stato RSI:</b> <span style="font-size: 1.1em;">{stato_rsi}</span></div>
-                                <div><b>Consiglio Operativo:</b> <span style="font-size: 1.1em; font-weight: bold; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">{consiglio}</span></div>
+                            <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center; font-family: sans-serif;">
+                                <div><b style="color: #93c5fd;">Stato RSI:</b> <span style="font-size: 1.1em; color: white;">{stato_rsi}</span></div>
+                                <div><b style="color: #93c5fd;">Consiglio Operativo:</b> <span style="font-size: 1.1em; font-weight: bold; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">{consiglio}</span></div>
                             </div>
                         """, unsafe_allow_html=True)
                         
@@ -186,7 +194,7 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         c3.metric("P/E (Prezzo/Utile)", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else "N/D")
                         c4.metric("EPS (Utile per azione)", f"{eps:.2f}" if isinstance(eps, (int, float)) else "N/D")
                         
-                        st.markdown(f"**Dividend Yield:** {div_yield_str} | **Settore:** {settore}")
+                        st.markdown(f"<br>**Dividend Yield:** {div_yield_str} | **Settore:** {settore}", unsafe_allow_html=True)
                         st.write("### Storico Prezzi (Ultimo Anno)")
                         st.line_chart(df['Close'])
                     else:
@@ -221,11 +229,11 @@ elif menu == "📈 Grafici & Analisi Tecnica":
                 rsi_corrente = df['RSI'].iloc[-1]
                 stato_rsi, consiglio = calcola_stato_rsi(rsi_corrente)
                 
-                # Box Semaforo & Consiglio in Analisi Tecnica
+                # Box Semaforo & Consiglio in Blu Navy
                 st.markdown(f"""
-                    <div style="background-color: #161b22; padding: 15px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 20px; text-align: center;">
-                        <span style="font-size: 1.1em; margin-right: 20px;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
-                        <span style="font-size: 1.1em; font-weight: bold; padding: 4px 10px; border-radius: 6px; background-color: #1f2937; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">🎯 Segnale: {consiglio}</span>
+                    <div style="background-color: #1e3a8a; color: white; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; margin-bottom: 20px; text-align: center; font-family: sans-serif;">
+                        <span style="font-size: 1.1em; margin-right: 20px; color: white;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
+                        <span style="font-size: 1.1em; font-weight: bold; padding: 4px 12px; border-radius: 6px; background-color: #111827; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">🎯 Segnale: {consiglio}</span>
                     </div>
                 """, unsafe_allow_html=True)
                 
@@ -502,7 +510,7 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
 
     # 2. Disclaimer Commissioni TR Compatto
     st.markdown("""
-        <div style="background-color: #111827; padding: 10px 15px; border-radius: 8px; border: 1px solid #374151; font-size: 0.9em; color: #9ca3af;">
+        <div style="background-color: #1e3a8a; padding: 10px 15px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em; color: white;">
             💡 <b>Nota Commissioni TR:</b> 1€ acquisto + 1€ vendita (Totale 2€ fissi). I micro-investimenti (es. 10€) subiscono un forte impatto commissionale; si consigliano capitali da 200€–400€ per ottimizzare il margine.
         </div>
     """, unsafe_allow_html=True)
