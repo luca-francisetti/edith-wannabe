@@ -99,7 +99,7 @@ if menu == "🏠 Home & Panoramica":
     st.markdown("""
         <style>
         .stApp {
-            background: linear-gradient(rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.92)), url('tony_stark.png');
+            background: linear-gradient(rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.92)), url('Miosfondo.png');
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
