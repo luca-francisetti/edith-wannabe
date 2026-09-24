@@ -96,7 +96,6 @@ menu = st.sidebar.radio(
 # SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Tony Stark Vetrina)
 # =====================================================================
 if menu == "🏠 Home & Panoramica":
-    # CSS personalizzato per applicare lo sfondo e forzare il testo bianco brillante
     st.markdown("""
         <style>
         .stApp {
@@ -105,7 +104,6 @@ if menu == "🏠 Home & Panoramica":
             background-attachment: fixed;
             background-position: center;
         }
-        /* Forza la leggibilità di tutti i testi e titoli nella Home */
         .stApp h1, .stApp h2, .stApp h3, .stApp p, .stApp span {
             color: #ffffff !important;
         }
@@ -136,7 +134,7 @@ if menu == "🏠 Home & Panoramica":
         idx += 1
 
     st.markdown("---")
-    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi**, i **REITs Immobiliari** o la **Sala Segnali**.")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi**, i **REITs Immobiliari**, la **Sala Segnali** o l'**Assistente IA**.")
 
 # =====================================================================
 # SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
@@ -432,13 +430,11 @@ elif menu == "🏢 Immobili & REITs Mensili":
     for r in reits_mensili_data:
         y = r["yield"]
         
-        # Calcolo su 100€
         lordo_100 = 100.0 * (y / 100.0)
         t_est_100 = lordo_100 * 0.15
         t_ita_100 = max(0.0, (lordo_100 * 0.26) - t_est_100)
         netto_mensile_100 = max(0.0, (lordo_100 - t_est_100 - t_ita_100) / 12.0)
         
-        # Calcolo su 10€ (Partendo dal basso)
         lordo_10 = 10.0 * (y / 100.0)
         t_est_10 = lordo_10 * 0.15
         t_ita_10 = max(0.0, (lordo_10 * 0.26) - t_est_10)
@@ -621,13 +617,24 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
 # SCHERMATA 7: ASSISTENTE IA & SEGNALI
 # =====================================================================
 elif menu == "🤖 Assistente IA & Segnali":
-    st.title("🤖 Assistente IA Gemini & Analisi Operativa")
-    st.markdown("Fai domande di finanza o chiedi un'analisi intelligente su un titolo.")
-    
-    domanda = st.text_area("Scrivi la tua richiesta o il titolo da analizzare:", value="Dammi un parere sui REITs immobiliari e come inserirli in un piano d'accumulo a piccolo budget.")
-    
-    if st.button("Chiedi a Gemini"):
-        with st.spinner("L'intelligenza artificiale sta elaborando la risposta..."):
-            risposta = get_gemini_response(domanda)
-            st.markdown("### Risposta di Gemini:")
-            st.write(risposta)
+    st.title("🤖 Assistente IA & Consulente Finanziario")
+    st.markdown("Interroga direttamente l'intelligenza artificiale di Google Gemini integrata in Edith per analisi di mercato approfondite, strategie di portafoglio o pareri su singoli asset.")
+
+    prompt_utente = st.text_area(
+        "Fai una domanda a Edith IA:",
+        placeholder="Es. Quali sono i principali rischi macroeconomici per i mercati azionari quest'anno? O analizza i punti di forza di Microsoft."
+    )
+
+    if st.button("Invia a Edith IA", type="primary"):
+        if not prompt_utente.strip():
+            st.warning("⚠️ Inserisci prima una domanda o un argomento da analizzare.")
+        else:
+            with st.spinner("🧠 Edith sta elaborando la risposta strategica..."):
+                risposta_ia = get_gemini_response(prompt_utente)
+                
+                st.markdown("---")
+                st.subheader("💡 Risposta dell'Assistente")
+                st.write(risposta_ia)
+                
+    st.markdown("---")
+    st.info("💡 **Consiglio:** Puoi usare questa sezione per chiedere pareri su strategie di asset allocation, chiarimenti sui dividendi o simulazioni di scenario basate sulle ultime notizie finanziarie.")
