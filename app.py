@@ -218,7 +218,11 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
     st.title("💰 Cantiere Dividendi & Motore Fiscale (Trade Republic)")
     st.markdown("Calcola al centesimo il rendimento netto dei dividendi considerando commissioni, ritenuta estera (es. W-8BEN USA al 15%) e tassazione italiana del 26% in regime amministrato.")
 
-    tab1, tab2 = st.tabs(["🧮 Calcolatore Singolo Investimento", "🏆 Classifica Top 10 Dividendi & Trappole IA"])
+    tab1, tab2, tab3 = st.tabs([
+        "🧮 Calcolatore Singolo Investimento", 
+        "🏆 Classifica Top 10 Dividendi & Trappole IA",
+        "🔥 Top 10 Alto Yield & Rischio"
+    ])
 
     with tab1:
         st.subheader("Simulatore Rendimento Netto su Capitale Investito")
@@ -266,7 +270,6 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 div_raw = inf.get('dividendYield', 0)
                 div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
                 
-                # Calcolo Netto Mensile su 100€
                 lordo_100_annuo = 100.0 * (div_yield / 100.0)
                 tassa_est = lordo_100_annuo * 0.15 
                 tassa_ita = max(0.0, (lordo_100_annuo * 0.26) - tassa_est)
@@ -303,6 +306,48 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 st.markdown("### Verdetto IA sulla sostenibilità:")
                 st.write(parere_ia)
 
+    with tab3:
+        st.subheader("🔥 Top 10 Alto Yield & Rischio (Potenziali Dividend Traps)")
+        st.markdown("Questa sezione monitora un ulteriore gruppo di 10 titoli noti per percentuali di dividendo molto elevate (spesso esposte a maggiore volatilità o rischio speculativo). I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
+
+        high_yield_tickers = ["PBR", "ENI.MI", "BTI", "AGNC", "NLY", "VOD", "VZ", "T", "PFE", "LEG"]
+        
+        dati_high_yield = []
+        for t in high_yield_tickers:
+            try:
+                tk = yf.Ticker(t)
+                inf = tk.info
+                nome = inf.get('longName', t)
+                prezzo = inf.get('currentPrice', inf.get('regularMarketPrice', 0))
+                
+                div_raw = inf.get('dividendYield', 0)
+                div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
+                
+                lordo_100_annuo = 100.0 * (div_yield / 100.0)
+                tassa_est = lordo_100_annuo * 0.15 
+                tassa_ita = max(0.0, (lordo_100_annuo * 0.26) - tassa_est)
+                netto_annuo = lordo_100_annuo - tassa_est - tassa_ita
+                netto_mensile = max(0.0, netto_annuo / 12.0)
+                
+                dati_high_yield.append({
+                    "Ticker": t,
+                    "Nome": nome,
+                    "Prezzo ($/€)": prezzo,
+                    "Dividend Yield (%)": round(div_yield, 2),
+                    "Netto Mensile su 100€ (€)": round(netto_mensile, 2)
+                })
+            except Exception:
+                pass
+
+        if dati_high_yield:
+            df_hy = pd.DataFrame(dati_high_yield)
+            # Ordinamento automatico dal rendimento più alto al più basso
+            df_hy = df_hy.sort_values(by="Dividend Yield (%)", ascending=False)
+            st.dataframe(df_hy, use_container_width=True)
+
+        st.markdown("---")
+        st.warning("⚠️ **Nota sul Rischio Elevato:** I titoli con rendimenti percentuali molto alti richiedono cautela estrema. Spesso un dividend yield elevato è il sintomo di un prezzo azionario in forte calo o di una scarsa sostenibilità dei flussi di cassa futuri.")
+
 # =====================================================================
 # SCHERMATA 5: ASSISTENTE IA & SEGNALI
 # =====================================================================
@@ -316,5 +361,4 @@ elif menu == "🤖 Assistente IA & Segnali":
         with st.spinner("L'intelligenza artificiale sta elaborando la risposta..."):
             risposta = get_gemini_response(domanda)
             st.markdown("### Risposta di Gemini:")
-            st.write(risposta)
             st.write(risposta)
