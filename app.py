@@ -16,10 +16,33 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Stile visivo generale con metriche in Blu Navy e testo bianco ad alto contrasto
+# Stile visivo generale, Sidebar scura e Pulsante freccia super visibile
 st.markdown("""
     <style>
     .main { color: #ffffff; }
+    
+    /* Sidebar Scura ad Alto Contrasto */
+    [data-testid="stSidebar"] {
+        background-color: #0b0f19 !important;
+        border-right: 2px solid #3b82f6 !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #ffffff !important;
+    }
+    
+    /* Pulsante per aprire/chiudere la sidebar reso evidente */
+    [data-testid="collapsedControl"] {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+        border: 2px solid #ffffff !important;
+        border-radius: 8px !important;
+        z-index: 999999 !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    [data-testid="collapsedControl"] svg {
+        fill: #ffffff !important;
+    }
+
     .stMetric { 
         background-color: #1e3a8a !important; 
         padding: 15px; 
@@ -93,13 +116,13 @@ menu = st.sidebar.radio(
 )
 
 # =====================================================================
-# SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Tony Stark Vetrina)
+# SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Personalizzato Più Visibile)
 # =====================================================================
 if menu == "🏠 Home & Panoramica":
     st.markdown("""
         <style>
         .stApp {
-            background: linear-gradient(rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.92)), url('https://raw.githubusercontent.com/luca-francisetti/edith-wannabe/refs/heads/main/Miosfondo.png.jfif');
+            background: linear-gradient(rgba(14, 17, 23, 0.55), rgba(14, 17, 23, 0.55)), url('https://raw.githubusercontent.com/luca-francisetti/edith-wannabe/refs/heads/main/Miosfondo.png.jfif');
             background-size: cover;
             background-attachment: fixed;
             background-position: center;
