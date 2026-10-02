@@ -11,56 +11,50 @@ import os
 # --- 1. CONFIGURAZIONE DELLA PAGINA & STILE BLU NAVY ---
 st.set_page_config(
     page_title="Edith - Piattaforma Finanziaria & IA",
-    page_icon="icona.png",  # Carica icona.png nella stessa cartella su GitHub
+    page_icon="icona.png",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Stile visivo generale, Sidebar scura e Pulsante freccia super visibile
 st.markdown("""
-    <style>
-    .main { color: #ffffff; }
-    
-    /* Sidebar Scura ad Alto Contrasto */
-    [data-testid="stSidebar"] {
-        background-color: #0b0f19 !important;
-        border-right: 2px solid #3b82f6 !important;
-    }
-    [data-testid="stSidebar"] * {
-        color: #ffffff !important;
-    }
-    
-    /* Pulsante per aprire/chiudere la sidebar reso evidente */
-    [data-testid="collapsedControl"] {
-        background-color: #3b82f6 !important;
-        color: #ffffff !important;
-        border: 2px solid #ffffff !important;
-        border-radius: 8px !important;
-        z-index: 999999 !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    [data-testid="collapsedControl"] svg {
-        fill: #ffffff !important;
-    }
-
-    .stMetric { 
-        background-color: #1e3a8a !important; 
-        padding: 15px; 
-        border-radius: 10px; 
-        border: 1px solid #3b82f6 !important; 
-    }
-    .stMetric label { color: #93c5fd !important; font-weight: 600; font-size: 0.95em; }
-    .stMetric [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: bold; }
-    .stMetric [data-testid="stMetricDelta"] { color: #ffffff !important; }
-    </style>
+<style>
+.main { color: #ffffff; }
+/* Sidebar Scura ad Alto Contrasto */
+[data-testid="stSidebar"] {
+    background-color: #0b0f19 !important;
+    border-right: 2px solid #3b82f6 !important;
+}
+[data-testid="stSidebar"] * {
+    color: #ffffff !important;
+}
+/* Pulsante per aprire/chiudere la sidebar reso evidente */
+[data-testid="collapsedControl"] {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+    border-radius: 8px !important;
+    z-index: 999999 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+[data-testid="collapsedControl"] svg {
+    fill: #ffffff !important;
+}
+.stMetric {
+    background-color: #1e3a8a !important;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #3b82f6 !important;
+}
+.stMetric label { color: #93c5fd !important; font-weight: 600; font-size: 0.95em; }
+.stMetric [data-testid="stMetricValue"] { color: #ffffff !important; font-weight: bold; }
+.stMetric [data-testid="stMetricDelta"] { color: #ffffff !important; }
+</style>
 """, unsafe_allow_html=True)
 
-# --- 2. GESTIONE API KEY & GEMINI (NASCOSTA IN EXPANDER) ---
-st.sidebar.title("🚀 Edith Trading Hub")
+# --- 2. GESTIONE API KEY & GEMINI ---
+st.sidebar.title("Edith Trading Hub")
 st.sidebar.markdown("---")
-
-# API Key protetta e nascosta in un menu a scomparsa
-with st.sidebar.expander("⚙️ Configurazione API Key", expanded=not bool(st.secrets.get("GEMINI_API_KEY", ""))):
+with st.sidebar.expander("🔑 Configurazione API Key", expanded=not bool(st.secrets.get("GEMINI_API_KEY", ""))):
     api_key = st.text_input("Inserisci Gemini API Key", type="password", value=st.secrets.get("GEMINI_API_KEY", ""))
 
 client = None
@@ -73,9 +67,7 @@ if api_key:
 def get_gemini_response(prompt):
     if not client:
         return "⚠️ Inserisci la tua API Key di Gemini nella configurazione laterale per attivare l'Intelligenza Artificiale."
-    
     models_to_try = ["gemini-2.5-flash", "gemini-3.5-flash", "gemini-3.8-flash"]
-    
     last_error = ""
     for model_name in models_to_try:
         try:
@@ -87,28 +79,26 @@ def get_gemini_response(prompt):
         except Exception as e:
             last_error = str(e)
             continue
-            
     return f"⚠️ I server di Google sono temporaneamente sovraccarichi. Riprova tra qualche istante. Dettaglio: {last_error}"
 
-# Funzione di supporto per lo stato RSI
 def calcola_stato_rsi(rsi_val):
     if np.isnan(rsi_val):
-        return "⚪ N/D", "NEUTRAL"
+        return "📊 N/D", "NEUTRAL"
     elif rsi_val < 30:
-        return "🟢 IPERVENDUTO", "COMPRA"
+        return "📉 IPERVENDUTO", "COMPRA"
     elif rsi_val > 70:
-        return "🔴 IPERCOMPRATO", "VENDI"
-    else:
-        return "🟡 NEUTRO", "HOLD"
+        return "📈 IPERCOMPRATO", "VENDI"
+    return "⚖️ NEUTRO", "HOLD"
 
 # --- 3. MENU DI NAVIGAZIONE A PIÙ SCHERMATE ---
 menu = st.sidebar.radio(
     "Seleziona Schermata:",
     [
-        "🏠 Home & Panoramica", 
-        "🔍 Rubrica A-Z & Ricerca Universale", 
-        "📈 Grafici & Analisi Tecnica", 
-        "💰 Cantiere Dividendi & Tasse",
+        "🏠 Home & Panoramica",
+        "🔍 Rubrica A-Z & Ricerca Universale",
+        "📈 Grafici & Analisi Tecnica",
+        "🏗️ Obiettivi & Piano Immobiliare",  # Nuova Branca Dedicata
+        "🏗️ Cantiere Dividendi & Tasse",
         "🏢 Immobili & REITs Mensili",
         "🚨 Sala Segnali (Day Trading)",
         "🤖 Assistente IA & Segnali"
@@ -116,29 +106,27 @@ menu = st.sidebar.radio(
 )
 
 # =====================================================================
-# SCHERMATA 1: HOME & PANORAMICA (Con Sfondo Personalizzato Più Visibile)
+# SCHERMATA 1: HOME & PANORAMICA
 # =====================================================================
 if menu == "🏠 Home & Panoramica":
     st.markdown("""
-        <style>
-        .stApp {
-            background: linear-gradient(rgba(14, 17, 23, 0.55), rgba(14, 17, 23, 0.55)), url('https://raw.githubusercontent.com/luca-francisetti/edith-wannabe/refs/heads/main/Miosfondo.png.jfif');
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
-        }
-        .stApp h1, .stApp h2, .stApp h3, .stApp p, .stApp span {
-            color: #ffffff !important;
-        }
-        </style>
+    <style>
+    .stApp {
+        background: linear-gradient(rgba(14, 17, 23, 0.55), rgba(14, 17, 23, 0.55)),
+        url('https://raw.githubusercontent.com/luca-francisetti/edith-wannabe/refs/heads/main/Miosfondo.png.jfif');
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+    }
+    .stApp h1, .stApp h2, .stApp h3, .stApp p, .stApp span {
+        color: #ffffff !important;
+    }
+    </style>
     """, unsafe_allow_html=True)
-    
     st.title("🏠 Home - Dashboard Finanziaria")
     st.markdown("Benvenuto nella tua applicazione di monitoraggio e analisi finanziaria assistita da IA.")
-    
     st.subheader("📊 Sintesi Indici Globali")
     indici = {"S&P 500": "^GSPC", "NASDAQ": "^IXIC", "FTSE MIB": "FTSEMIB.MI", "Oro": "GC=F", "Bitcoin": "BTC-USD"}
-    
     cols = st.columns(len(indici))
     idx = 0
     for name, symbol in indici.items():
@@ -155,9 +143,8 @@ if menu == "🏠 Home & Panoramica":
             except Exception:
                 st.metric(label=name, value="Errore")
         idx += 1
-
     st.markdown("---")
-    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Cantiere Dividendi**, i **REITs Immobiliari**, la **Sala Segnali** o l'**Assistente IA**.")
+    st.info("💡 **Come procedere:** Usa il menu laterale a sinistra per esplorare la Rubrica, l'Analisi Tecnica, il **Reparto Immobiliare & Obiettivi**, il **Cantiere Dividendi**, la **Sala Segnali** o l'**Assistente IA**.")
 
 # =====================================================================
 # SCHERMATA 2: RUBRICA A-Z & RICERCA UNIVERSALE
@@ -165,15 +152,12 @@ if menu == "🏠 Home & Panoramica":
 elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
     st.title("🔍 Rubrica A-Z & Ricerca Azienda Globale")
     st.markdown("Digita il nome di **qualsiasi azienda al mondo** (es. *Coca-Cola*, *Tesla*, *Ferrari*, *Enel*, *Apple*) nella barra sottostante:")
-
     query_testo = st.text_input("Cerca nome azienda o parola chiave:", value="Coca-Cola")
-
     if query_testo:
         with st.spinner("Ricerca globale in corso su Yahoo Finance..."):
             try:
                 ricerca = yf.Search(query_testo, max_results=10)
                 quotes = ricerca.quotes
-                
                 if not quotes:
                     st.warning("Nessuna azienda trovata con questo nome. Prova a digitare il nome in inglese o la sigla esatta.")
                 else:
@@ -184,54 +168,42 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
                         borsa = q.get('exchange', 'Mercato')
                         etichetta = f"{nome} ({simbolo}) - [{borsa}]"
                         opzioni_mappate[etichetta] = simbolo
-                    
                     scelta_utente = st.selectbox("Seleziona il risultato corretto dalla ricerca:", list(opzioni_mappate.keys()))
                     ticker_selezionato = opzioni_mappate[scelta_utente]
-                    
                     st.success(f"Ticker selezionato: **{ticker_selezionato}**")
-                    
                     stock = yf.Ticker(ticker_selezionato)
                     info = stock.info
                     df = stock.history(period="1y")
-                    
                     if not df.empty:
                         delta = df['Close'].diff()
                         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
                         rs = gain / loss
                         df['RSI'] = 100 - (100 / (1 + rs))
-                        
                         prezzo_attuale = df['Close'].iloc[-1]
                         rsi_attuale = df['RSI'].iloc[-1]
-                        
                         stato_rsi, consiglio = calcola_stato_rsi(rsi_attuale)
-                        
                         pe_ratio = info.get('trailingPE', 'N/D')
                         eps = info.get('trailingEps', 'N/D')
-                        
                         div_raw = info.get('dividendYield', 0)
                         div_yield_val = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
                         div_yield_str = f"{div_yield_val:.2f}%" if div_yield_val > 0 else "N/D"
-                        
                         settore = info.get('sector', 'N/D')
                         nome_lungo = info.get('longName', ticker_selezionato)
-                        
                         st.markdown("---")
-                        st.subheader(f"📊 Dati Fondamentali: {nome_lungo}")
-                        
+                        st.subheader(f"📋 Dati Fondamentali: {nome_lungo}")
+                        color_consiglio = '#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')
                         st.markdown(f"""
-                            <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center; font-family: sans-serif;">
-                                <div><b style="color: #93c5fd;">Stato RSI:</b> <span style="font-size: 1.1em; color: white;">{stato_rsi}</span></div>
-                                <div><b style="color: #93c5fd;">Consiglio Operativo:</b> <span style="font-size: 1.1em; font-weight: bold; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">{consiglio}</span></div>
-                            </div>
+                        <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px; display: flex; justify-content: space-around; align-items: center; font-family: sans-serif;">
+                        <div><b style="color: #93c5fd;">Stato RSI:</b> <span style="font-size: 1.1em; color: white;">{stato_rsi}</span></div>
+                        <div><b style="color: #93c5fd;">Consiglio Operativo:</b> <span style="font-size: 1.1em; font-weight: bold; color: {color_consiglio};">{consiglio}</span></div>
+                        </div>
                         """, unsafe_allow_html=True)
-                        
                         c1, c2, c3, c4 = st.columns(4)
                         c1.metric("Prezzo Attuale", f"${prezzo_attuale:,.2f}")
                         c2.metric("RSI (14)", f"{rsi_attuale:.1f}" if not np.isnan(rsi_attuale) else "N/D")
                         c3.metric("P/E (Prezzo/Utile)", f"{pe_ratio:.2f}" if isinstance(pe_ratio, (int, float)) else "N/D")
                         c4.metric("EPS (Utile per azione)", f"{eps:.2f}" if isinstance(eps, (int, float)) else "N/D")
-                        
                         st.markdown(f"<br>**Dividend Yield:** {div_yield_str} | **Settore:** {settore}", unsafe_allow_html=True)
                         st.write("### Storico Prezzi (Ultimo Anno)")
                         st.line_chart(df['Close'])
@@ -245,42 +217,35 @@ elif menu == "🔍 Rubrica A-Z & Ricerca Universale":
 # =====================================================================
 elif menu == "📈 Grafici & Analisi Tecnica":
     st.title("📈 Analisi Tecnica con Medie Mobili e RSI")
-    
     ticker_input = st.text_input("Inserisci il Ticker esatto (es. AAPL, KO, TSLA, ENEL.MI)", value="KO").upper()
     periodo = st.selectbox("Seleziona Periodo", ["3mo", "6mo", "1y", "2y", "5y"], index=2)
-    
     if ticker_input:
         try:
             stock = yf.Ticker(ticker_input)
             df = stock.history(period=periodo)
-            
             if not df.empty:
                 df['SMA_50'] = df['Close'].rolling(window=50).mean()
                 df['SMA_200'] = df['Close'].rolling(window=200).mean()
-                
                 delta = df['Close'].diff()
                 gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
                 loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
                 rs = gain / loss
                 df['RSI'] = 100 - (100 / (1 + rs))
-                
                 rsi_corrente = df['RSI'].iloc[-1]
                 stato_rsi, consiglio = calcola_stato_rsi(rsi_corrente)
-                
+                color_cons = '#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')
                 st.markdown(f"""
-                    <div style="background-color: #1e3a8a; color: white; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; margin-bottom: 20px; text-align: center; font-family: sans-serif;">
-                        <span style="font-size: 1.1em; margin-right: 20px; color: white;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
-                        <span style="font-size: 1.1em; font-weight: bold; padding: 4px 12px; border-radius: 6px; background-color: #111827; color: {'#4ade80' if consiglio == 'COMPRA' else ('#f87171' if consiglio == 'VENDI' else '#fbbf24')};">🎯 Segnale: {consiglio}</span>
-                    </div>
+                <div style="background-color: #1e3a8a; color: white; padding: 15px; border-radius: 10px; border: 1px solid #3b82f6; margin-bottom: 20px; text-align: center; font-family: sans-serif;">
+                <span style="font-size: 1.1em; margin-right: 20px; color: white;"><b>Analisi RSI (14):</b> {stato_rsi} (Valore: {rsi_corrente:.1f})</span>
+                <span style="font-size: 1.1em; font-weight: bold; padding: 4px 12px; border-radius: 6px; background-color: #111827; color: {color_cons};">Segnale: {consiglio}</span>
+                </div>
                 """, unsafe_allow_html=True)
-                
                 st.subheader(f"Andamento Prezzo e Medie Mobili ({ticker_input})")
                 fig_price = go.Figure()
                 fig_price.add_trace(go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Prezzo Chiusura', line=dict(color='blue')))
                 fig_price.add_trace(go.Scatter(x=df.index, y=df['SMA_50'], mode='lines', name='SMA 50', line=dict(color='orange')))
                 fig_price.add_trace(go.Scatter(x=df.index, y=df['SMA_200'], mode='lines', name='SMA 200', line=dict(color='red')))
                 st.plotly_chart(fig_price, use_container_width=True)
-                
                 st.subheader("Indice di Forza Relativa (RSI 14)")
                 fig_rsi = go.Figure()
                 fig_rsi.add_trace(go.Scatter(x=df.index, y=df['RSI'], mode='lines', name='RSI', line=dict(color='purple')))
@@ -293,18 +258,115 @@ elif menu == "📈 Grafici & Analisi Tecnica":
             st.error(f"Errore: {e}")
 
 # =====================================================================
+# SCHERMATA NUOVA: OBIETTIVI & PIANO IMMOBILIARE (REITs & PAC TR)
+# =====================================================================
+elif menu == "🏗️ Obiettivi & Piano Immobiliare":
+    st.title("🏗️ Reparto Immobiliare: Traguardi di Rendita Mensile")
+    st.markdown("""
+    Questa sezione dedicata calcola in modo professionale il percorso finanziario per raggiungere i tuoi traguardi di **rendita passiva netta mensile** tramite i REITs globali disponibili su **Trade Republic**. 
+    Il modello tiene conto della tassazione italiana (26% in regime amministrato, con scomputo della ritenuta estera al 15%), di una stima prudenziale di crescita del capitale e della potenza del piano di accumulo (PAC).
+    """)
+    
+    st.markdown("---")
+    st.subheader("🎯 I tuoi 5 Traguardi di Rendita Mensile Netta")
+    
+    col_par1, col_par2, col_par3 = st.columns(3)
+    with col_par1:
+        yield_medio_input = st.number_input("Dividend Yield Medio Atteso (%)", min_value=3.0, max_value=15.0, value=5.5, step=0.1)
+    with col_par2:
+        crescita_capitale_prudenziale = st.number_input("Stima Crescita Capitale Annua (%) [Prudenziale]", min_value=0.0, max_value=10.0, value=2.0, step=0.5)
+    with col_par3:
+        pac_mensile_base = st.number_input("Tuo investimento mensile base (PAC) [€]", min_value=10.0, value=10.0, step=10.0)
+
+    coefficiente_netto = 0.74
+    traguardi_list = [10, 20, 50, 75, 100]
+    tabella_obiettivi = []
+
+    for t in traguardi_list:
+        netto_annuo_target = t * 12
+        lordo_annuo_necessario = netto_annuo_target / coefficiente_netto
+        capitale_totale_necessario = lordo_annuo_necessario / (yield_medio_input / 100.0)
+        
+        tasso_annuo_totale = (yield_medio_input + crescita_capitale_prudenziale) / 100.0
+        tasso_mensile = tasso_annuo_totale / 12.0
+        pmt = pac_mensile_base
+        
+        if tasso_mensile > 0:
+            valore_formula = (capitale_totale_necessario * tasso_mensile / pmt) + 1
+            if valore_formula > 1:
+                mesi_stimati = np.log(valore_formula) / np.log(1 + tasso_mensile)
+                anni_stimati = mesi_stimati / 12.0
+                tempo_str = f"{int(mesi_stimati)} mesi (~{anni_stimati:.1f} anni)"
+            else:
+                tempo_str = "Raggiungibile immediatamente"
+        else:
+            mesi_stimati = capitale_totale_necessario / pmt
+            tempo_str = f"{int(mesi_stimati)} mesi (~{mesi_stimati/12:.1f} anni)"
+            
+        tabella_obiettivi.append({
+            "Traguardo Mensile Netto": f"€ {t},00 / mese",
+            "Capitale Totale Richiesto (Lordo/Netto)": f"€ {capitale_totale_necessario:,.2f}",
+            f"Tempo Stimato (con PAC da € {int(pmt)}/mo)": tempo_str
+        })
+
+    st.dataframe(pd.DataFrame(tabella_obiettivi), use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("📊 Ripartizione Strategica per Titolare (Trade Republic)")
+    st.markdown("Scegli un traguardo per scoprire come suddividere l'investimento mensile sui principali REITs globali presenti su Trade Republic:")
+    
+    reits_selezionati = [
+        {"ticker": "O", "nome": "Realty Income Corp. (Mensile)", "yield": 5.3},
+        {"ticker": "STAG", "nome": "STAG Industrial Inc. (Logistica)", "yield": 4.1},
+        {"ticker": "ADC", "nome": "Agree Realty Corp. (Retail)", "yield": 4.4},
+        {"ticker": "LTC", "nome": "LTC Properties Inc. (Sanitario)", "yield": 6.2}
+    ]
+    
+    scelta_traguardo = st.selectbox("Seleziona il traguardo mensile di tuo interesse:", [f"€ {t} al mese" for t in traguardi_list])
+    valore_scelto = int(scelta_traguardo.replace("€ ", "").replace(" al mese", ""))
+    
+    capitale_richiesto_scelto = ((valore_scelto * 12) / coefficiente_netto) / (yield_medio_input / 100.0)
+    
+    st.info(f"💡 Per incassare **€ {valore_scelto} netti ogni mese**, ti serve un capitale complessivo di circa **€ {capitale_richiesto_scelto:,.2f}**.")
+    
+    dettaglio_capitale_per_titolo = []
+    quota_capitale = capitale_richiesto_scelto / len(reits_selezionati)
+    
+    for r in reits_selezionati:
+        y_tit = r["yield"]
+        lordo_annuo_tit = quota_capitale * (y_tit / 100.0)
+        netto_annuo_tit = lordo_annuo_tit * coefficiente_netto
+        netto_mensile_tit = netto_annuo_tit / 12.0
+        
+        dettaglio_capitale_per_titolo.append({
+            "Ticker": r["ticker"],
+            "Società / Settore": r["nome"],
+            "Yield (%)": f"{y_tit:.2f}%",
+            "Capitale da allocare (Quota)": f"€ {quota_capitale:,.2f}",
+            "Ritorno Netto Mensile Stimato": f"€ {netto_mensile_tit:,.2f}"
+        })
+        
+    st.dataframe(pd.DataFrame(dettaglio_capitale_per_titolo), use_container_width=True)
+    
+    st.markdown("---")
+    st.subheader("🚀 Analisi Dedicata: Partire con 10 Euro al Mese")
+    st.markdown(f"""
+    * **Simulazione di Partenza:** Investendo regolarmente **10,00 € al mese** (tramite un PAC automatico su Trade Republic a zero commissioni sui piani di accumulo), sfrutti l'interesse composto reinvestendo i dividendi trimestrali/mensili percepiti.
+    * **Crescita e Arrotondamento Prudenziale:** Considerando una rivalutazione prudenziale annua del **{crescita_capitale_prudenziale}%** (arrotondata per difetto) unita ai flussi di cassa dei REITs, il sistema scala gradualmente dai primi centesimi di rendita fino al traguardo dei 10€, 20€ e successivi.
+    * **Vantaggio Operativo:** Su Trade Republic puoi impostare il PAC ricorrente gratuito sui titoli frazionati (come Realty Income - `O`), permettendoti di comprare quote di immobili commerciali americani e logistici anche partendo da pochissimi euro senza bloccare capitale pesante.
+    """)
+
+# =====================================================================
 # SCHERMATA 4: CANTIERE DIVIDENDI & TASSE (TRADE REPUBLIC)
 # =====================================================================
-elif menu == "💰 Cantiere Dividendi & Tasse":
-    st.title("💰 Cantiere Dividendi & Motore Fiscale (Trade Republic)")
+elif menu == "🏗️ Cantiere Dividendi & Tasse":
+    st.title("🏗️ Cantiere Dividendi & Motore Fiscale (Trade Republic)")
     st.markdown("Calcola al centesimo il rendimento netto dei dividendi considerando commissioni, ritenuta estera (es. W-8BEN USA al 15%) e tassazione italiana del 26% in regime amministrato.")
-
     tab1, tab2, tab3 = st.tabs([
-        "🧮 Calcolatore Singolo Investimento", 
-        "🏆 Classifica Top 10 Dividendi & Trappole IA",
-        "🔥 Top 10 Alto Yield & Rischio"
+        "Classifica Top 10 Dividendi & Trappole IA",
+        "Calcolatore Singolo Investimento",
+        "Top 10 Alto Yield & Rischio"
     ])
-
     with tab1:
         st.subheader("Simulatore Rendimento Netto su Capitale Investito")
         col_c1, col_c2 = st.columns(2)
@@ -314,32 +376,27 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
         with col_c2:
             commissione_tr = st.number_input("Commissione Trade Republic per operazione (€)", min_value=0.0, value=1.0, step=0.5)
             ritenuta_estera_pct = st.selectbox("Ritenuta alla fonte estera (es. W-8BEN per USA)", [15.0, 0.0, 25.0, 30.0], index=0)
-
+        
         dividendo_lordo = capitale * (yield_input / 100.0)
         base_netta_lorda = max(0.0, dividendo_lordo)
-        
         tassa_estera = base_netta_lorda * (ritenuta_estera_pct / 100.0)
         tassa_totale_dovuta = base_netta_lorda * 0.26
         tassa_italia_aggiuntiva = max(0.0, tassa_totale_dovuta - tassa_estera)
-        
         dividendo_netto_annuo = base_netta_lorda - tassa_estera - tassa_italia_aggiuntiva - commissione_tr
         dividendo_netto_mensile = max(0.0, dividendo_netto_annuo / 12.0)
-
+        
         st.markdown("---")
         res1, res2, res3, res4 = st.columns(4)
         res1.metric("Dividendo Lordo Annuo", f"€ {dividendo_lordo:.2f}")
         res2.metric("Commissione TR (Una tantum)", f"€ {commissione_tr:.2f}")
         res3.metric("Tasse (Estera + ITA)", f"€ {tassa_estera + tassa_italia_aggiuntiva:.2f}")
         res4.metric("Netto Mensile Reale", f"€ {dividendo_netto_mensile:.2f}", delta="al mese")
-
-        st.info("ℹ️ **Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia.")
-
-    with tab2:
-        st.subheader("🏆 Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
-        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione. I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
-
-        top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
+        st.info("**Nota Fiscale Trade Republic (Regime Amministrato):** Trade Republic agisce come sostituto d'imposta calcolando e versando automaticamente le ritenute e le imposte in Italia.")
         
+    with tab2:
+        st.subheader("Classifica Top 10 Regine dei Dividendi & Controllo 'Dividend Trap'")
+        st.markdown("Analisi automatica sui titoli storici a maggiore distribuzione. I valori mostrano il **Netto Mensile** effettivo su un investimento di **100€**.")
+        top_div_tickers = ["O", "MAIN", "STAG", "KO", "JNJ", "MO", "PEP", "ABBV", "ENEL.MI", "BHP"]
         dati_dividendi = []
         for t in top_div_tickers:
             try:
@@ -347,16 +404,13 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 inf = tk.info
                 nome = inf.get('longName', t)
                 prezzo = inf.get('currentPrice', inf.get('regularMarketPrice', 0))
-                
                 div_raw = inf.get('dividendYield', 0)
                 div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
-                
                 lordo_100_annuo = 100.0 * (div_yield / 100.0)
-                tassa_est = lordo_100_annuo * 0.15 
+                tassa_est = lordo_100_annuo * 0.15
                 tassa_ita = max(0.0, (lordo_100_annuo * 0.26) - tassa_est)
                 netto_annuo = lordo_100_annuo - tassa_est - tassa_ita
                 netto_mensile = max(0.0, netto_annuo / 12.0)
-                
                 dati_dividendi.append({
                     "Ticker": t,
                     "Nome": nome,
@@ -366,29 +420,26 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 })
             except Exception:
                 pass
-
         if dati_dividendi:
             df_div = pd.DataFrame(dati_dividendi)
             st.dataframe(df_div, use_container_width=True)
-
         st.markdown("---")
-        st.subheader("🤖 Analisi IA 'Dividend Trap'")
+        st.subheader("Analisi IA 'Dividend Trap'")
         titolo_da_verificare = st.text_input("Inserisci Ticker da analizzare per il rischio trappola:", value="MO")
         if st.button("Esegui Controllo Trappola Dividendo"):
             with st.spinner("L'intelligenza artificiale sta esaminando la sostenibilità del dividendo..."):
                 prompt = f"""
-                Analizza il titolo azionario {titolo_da_verificare} dal punto di vista della sostenibilità del suo dividendo. 
-                Verifica se il dividend yield elevato rappresenta una 'trappola da dividendo' (dividend trap) dovuta a crollo del business o debito eccessivo, oppure se è un dividendo sicuro. 
+                Analizza il titolo azionario {titolo_da_verificare} dal punto di vista della sostenibilità del suo dividendo.
+                Verifica se il dividend yield elevato rappresenta una 'trappola da dividendo' (dividend trap) dovuta a crollo del business o debito eccessivo, oppure se è un dividendo sicuro.
                 Fornisci un verdetto chiaro e motivato.
                 """
                 parere_ia = get_gemini_response(prompt)
                 st.markdown("### Verdetto IA sulla sostenibilità:")
                 st.write(parere_ia)
-
+                
     with tab3:
-        st.subheader("🔥 Top 10 Alto Yield & Rischio (Potenziali Dividend Traps)")
+        st.subheader("Top 10 Alto Yield & Rischio (Potenziali Dividend Traps)")
         high_yield_tickers = ["PBR", "ENI.MI", "BTI", "AGNC", "NLY", "VOD", "VZ", "T", "PFE", "LEG"]
-        
         dati_high_yield = []
         for t in high_yield_tickers:
             try:
@@ -396,16 +447,13 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 inf = tk.info
                 nome = inf.get('longName', t)
                 prezzo = inf.get('currentPrice', inf.get('regularMarketPrice', 0))
-                
                 div_raw = inf.get('dividendYield', 0)
                 div_yield = (div_raw * 100) if (div_raw and div_raw <= 0.5) else (div_raw if div_raw else 0.0)
-                
                 lordo_100_annuo = 100.0 * (div_yield / 100.0)
-                tassa_est = lordo_100_annuo * 0.15 
+                tassa_est = lordo_100_annuo * 0.15
                 tassa_ita = max(0.0, (lordo_100_annuo * 0.26) - tassa_est)
                 netto_annuo = lordo_100_annuo - tassa_est - tassa_ita
                 netto_mensile = max(0.0, netto_annuo / 12.0)
-                
                 dati_high_yield.append({
                     "Ticker": t,
                     "Nome": nome,
@@ -415,27 +463,24 @@ elif menu == "💰 Cantiere Dividendi & Tasse":
                 })
             except Exception:
                 pass
-
         if dati_high_yield:
             df_hy = pd.DataFrame(dati_high_yield)
             df_hy = df_hy.sort_values(by="Dividend Yield (%)", ascending=False)
             st.dataframe(df_hy, use_container_width=True)
 
 # =====================================================================
-# SCHERMATA 5: IMMOBILI & REITs MENSILI
+# SCHERMATA 5: IMMOBILI & REITS MENSILI
 # =====================================================================
 elif menu == "🏢 Immobili & REITs Mensili":
     st.title("🏢 Immobili & Frazionamento (REITs)")
     st.markdown("""
     Per investire in immobili e ottenere rendite passive con percentuali minime di edifici senza sborsare centinaia di migliaia d'euro, sfrutteremo i **REIT (Real Estate Investment Trusts)**.
-    
     Sono società immobiliari quotate in borsa (acquistabili comodamente su **Trade Republic** a partire da pochi euro) che per legge devono distribuire quasi tutti gli affitti percepiti sotto forma di dividendi mensili o trimestrali.
     """)
-    
     st.markdown("---")
-    st.subheader("🏙️ Immobili & REITs Mensili: I 10 Migliori Globali su Trade Republic")
-    st.markdown("Una sezione dedicata ai 10 migliori REITs globali presenti su Trade Republic che pagano dividendi con stima precisa di quanto ti tornerà in tasca ogni singolo mese su **100€** e, in evidenza nella colonna a destra, su **10€** (perché parti dal basso).")
-
+    st.subheader("Immobili & REITs Mensili: I 10 Migliori Globali su Trade Republic")
+    st.markdown("Una sezione dedicata ai 10 migliori REITs globali presenti su Trade Republic che pagano dividendi con stima precisa di quanto ti tornerà in tasca ogni singolo mese su **100€** e su **10€** (perché parti dal basso).")
+    
     reits_mensili_data = [
         {"ticker": "O", "nome": "Realty Income Corp.", "settore": "Retail / Commerciale", "yield": 5.3},
         {"ticker": "STAG", "nome": "STAG Industrial Inc.", "settore": "Logistica & Magazzini", "yield": 4.1},
@@ -448,11 +493,10 @@ elif menu == "🏢 Immobili & REITs Mensili":
         {"ticker": "NLY", "nome": "Annaly Capital Management", "settore": "Mortgage REITs / Finanziario", "yield": 13.5},
         {"ticker": "PSEC", "nome": "Prospect Capital Corp.", "settore": "Finanziario / Immobili", "yield": 11.0}
     ]
-
+    
     tabella_reit_output = []
     for r in reits_mensili_data:
         y = r["yield"]
-        
         lordo_100 = 100.0 * (y / 100.0)
         t_est_100 = lordo_100 * 0.15
         t_ita_100 = max(0.0, (lordo_100 * 0.26) - t_est_100)
@@ -469,15 +513,13 @@ elif menu == "🏢 Immobili & REITs Mensili":
             "Settore": r["settore"],
             "Yield (%)": f"{y:.2f}%",
             "Netto Mensile (su 100€)": f"€ {netto_mensile_100:.4f}",
-            "🟢 Netto Mensile (su 10€)": f"€ {netto_mensile_10:.4f}"
+            "Netto Mensile (su 10€)": f"€ {netto_mensile_10:.4f}"
         })
-
+        
     df_reit_view = pd.DataFrame(tabella_reit_output)
     st.dataframe(df_reit_view, use_container_width=True)
-
     st.markdown("---")
     st.subheader("🧮 Calcolatore Rendita Passiva Metri Quadri Frazionati")
-    
     col_sim_r1, col_sim_r2 = st.columns(2)
     with col_sim_r1:
         capitale_reit = st.number_input("Capitale Investito in REITs (€)", min_value=10.0, value=150.0, step=10.0)
@@ -489,12 +531,11 @@ elif menu == "🏢 Immobili & REITs Mensili":
     tass_ita_reit = max(0.0, (lordo_reit_annuo * 0.26) - tass_est_reit)
     netto_annuo_reit = lordo_reit_annuo - tass_est_reit - tass_ita_reit
     netto_mensile_reit = netto_annuo_reit / 12.0
-
+    
     cr1, cr2, cr3 = st.columns(3)
     cr1.metric("Rendita Lorda Annua", f"€ {lordo_reit_annuo:.2f}")
     cr2.metric("Rendita Netta Annua", f"€ {netto_annuo_reit:.2f}")
     cr3.metric("Rendita Netta Mensile", f"€ {netto_mensile_reit:.2f}", delta="al mese")
-
     st.info(f"💡 **Suggerimento Operativo:** Con soli **€ {capitale_reit:,.2f}** investiti in REITs, possiedi una piccola frazione di centinaia di immobili commerciali e logistici nel mondo, ricevendo ogni mese circa **€ {netto_mensile_reit:.2f}** netti sul tuo conto Trade Republic.")
 
 # =====================================================================
@@ -502,53 +543,49 @@ elif menu == "🏢 Immobili & REITs Mensili":
 # =====================================================================
 elif menu == "🚨 Sala Segnali (Day Trading)":
     st.title("🚨 Sala Segnali - Day Trading (Ottimizzato per Trade Republic - Solo Long)")
-    
     now_milano = datetime.now(ZoneInfo("Europe/Rome"))
     now_ny = datetime.now(ZoneInfo("America/New_York"))
-    
     min_milano = now_milano.hour * 60 + now_milano.minute
     
     if 545 <= min_milano <= 600:
-        color_milano = "#4ade80" 
+        color_milano = "#4ade80"
     elif 690 <= min_milano <= 870:
-        color_milano = "#ef4444" 
+        color_milano = "#ef4444"
     else:
         color_milano = "white"
-
+        
     if 930 <= min_milano <= 990:
-        color_ny = "#4ade80" 
+        color_ny = "#4ade80"
     elif 1260 <= min_milano <= 1320:
-        color_ny = "#ef4444" 
+        color_ny = "#ef4444"
     else:
         color_ny = "white"
-    
+        
     col_cl1, col_cl2 = st.columns(2)
     with col_cl1:
         st.markdown(f"""
-            <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
-                <b>📍 MILANO (Borsa Italiana)</b><br>
-                <span style="font-size: 1.3em; font-weight: bold; color: {color_milano};">{now_milano.strftime('%H:%M:%S')}</span>
-            </div>
+        <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
+        <b>📍 MILANO (Borsa Italiana)</b><br>
+        <span style="font-size: 1.3em; font-weight: bold; color: {color_milano};">{now_milano.strftime('%H:%M:%S')}</span>
+        </div>
         """, unsafe_allow_html=True)
     with col_cl2:
         st.markdown(f"""
-            <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
-                <b>🗽 NEW YORK (Wall Street)</b><br>
-                <span style="font-size: 1.3em; font-weight: bold; color: {color_ny};">{now_ny.strftime('%H:%M:%S')}</span>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("""
-        <div style="background-color: #1e3a8a; padding: 10px 15px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em; color: white;">
-            💡 <b>Nota Commissioni TR:</b> 1€ acquisto + 1€ vendita (Totale 2€ fissi). I micro-investimenti (es. 10€) subiscono un forte impatto commissionale; si consigliano capitali da 200€–400€ per ottimizzare il margine.
+        <div style="background-color: #1e3a8a; color: white; padding: 10px; border-radius: 8px; text-align: center; font-family: sans-serif;">
+        <b>📍 NEW YORK (Wall Street)</b><br>
+        <span style="font-size: 1.3em; font-weight: bold; color: {color_ny};">{now_ny.strftime('%H:%M:%S')}</span>
         </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background-color: #1e3a8a; padding: 10px 15px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em; color: white;">
+    <b>Nota Commissioni TR:</b> 1€ acquisto + 1€ vendita (Totale 2€ fissi). I micro-investimenti (es. 10€) subiscono un forte impatto commissionale; si consigliano capitali da 200€-400€ per ottimizzare il margine.
+    </div>
     """, unsafe_allow_html=True)
-    
     st.markdown("---")
-    st.subheader("⚡ Top 5 Segnali Long (Analisi Quantitativa in Tempo Reale)")
-
+    st.subheader("🎯 Top 5 Segnali Long (Analisi Quantitativa in Tempo Reale)")
+    
     if st.button("🚀 Avvia Scansione e Calcola Top 5 Long", type="primary"):
         with st.spinner("Scansione mercati e calcolo indicatori in corso..."):
             paniere_day = [
@@ -562,7 +599,6 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
                 ("UCG.MI", "UniCredit S.p.A."),
                 ("RACE.MI", "Ferrari N.V.")
             ]
-            
             risultati_analisi = []
             for ticker, nome_compagnia in paniere_day:
                 try:
@@ -574,9 +610,7 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
                         var_pct = ((p_attuale - p_apertura) / p_apertura) * 100
                         vol_medio = df['Volume'].mean()
                         vol_ultimo = df['Volume'].iloc[-1]
-                        
                         score = var_pct + (2.0 if vol_ultimo > vol_medio * 1.2 else 0.0)
-                        
                         risultati_analisi.append({
                             "ticker": ticker,
                             "nome": nome_compagnia,
@@ -586,7 +620,6 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
                         })
                 except Exception:
                     pass
-            
             risultati_analisi = sorted(risultati_analisi, key=lambda x: x['score'], reverse=True)[:5]
             
             if not risultati_analisi:
@@ -594,47 +627,45 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
             else:
                 for idx, item in enumerate(risultati_analisi, 1):
                     p_curr = item['prezzo']
-                    target_pct = 1.00 
+                    target_pct = 1.00
                     p_target = p_curr * (1 + target_pct / 100.0)
                     
                     cap_10 = 10.0
                     lordo_10 = cap_10 * (target_pct / 100.0)
-                    netto_10 = lordo_10 - 2.0 
+                    netto_10 = lordo_10 - 2.0
                     
                     cap_consigliato = 200.0 if p_curr < 200 else 400.0
                     lordo_cons = cap_consigliato * (target_pct / 100.0)
                     netto_cons = lordo_cons - 2.0
                     
                     with st.container():
-                        st.markdown(f"### #{idx} — {item['nome']} (`{item['ticker']}`)")
+                        st.markdown(f"### #{idx} - {item['nome']} (`{item['ticker']}`)")
                         col_main, col_mini = st.columns([2, 1])
-                        
                         with col_main:
                             st.markdown(f"""
-                            - **Prezzo Attuale:** € {p_curr:,.2f}  
-                            - **Variazione Intraday:** `{item['var']:+.2f}%`  
-                            - **Target di Rialzo:** `+{target_pct:.2f}%`  
-                            - **Prezzo di Vendita (Target):** **€ {p_target:,.2f}**  
-                            - **Capitale Consigliato:** `€ {cap_consigliato:,.0f}` (Utile lordo stimato: € {lordo_cons:.2f} | Netto: € {netto_cons:.2f})  
-                            - **Timeframe:** 25–40 minuti | **Strategia:** Long intraday momentum.
+                            - **Prezzo Attuale:** € {p_curr:,.2f}
+                            - **Variazione Intraday:** `{item['var']:+.2f}%`
+                            - **Target di Rialzo:** `+{target_pct:.2f}%`
+                            - **Prezzo di Vendita (Target):** **€ {p_target:,.2f}**
+                            - **Capitale Consigliato:** `€ {cap_consigliato:,.0f}` (Utile lordo stimato: € {lordo_cons:.2f} | Netto: € {netto_cons:.2f})
+                            - **Timeframe:** 25-40 minuti | **Strategia:** Long intraday momentum.
                             """)
-                        
                         with col_mini:
+                            color_net10 = "#f87171" if netto_10 < 0 else "#4ade80"
                             st.markdown(f"""
                             <div style="background-color: #1e3a8a; color: white; padding: 12px; border-radius: 8px; border: 1px solid #3b82f6; font-size: 0.9em;">
-                                <div style="font-weight: bold; margin-bottom: 6px; color: #93c5fd;">💎 Micro-Investimento (10€)</div>
-                                • Capitale: <b>€ 10,00</b><br>
-                                • Target Vendita: <b>€ {p_target:,.2f}</b><br>
-                                • Lordo: € {lordo_10:.2f}<br>
-                                • Commissioni TR: € 2,00<br>
-                                <hr style="margin: 6px 0; border-color: #3b82f6;">
-                                • Netto: <b style="color: {"#f87171" if netto_10 < 0 else "#4ade80"};">€ {netto_10:.2f}</b>
+                            <div style="font-weight: bold; margin-bottom: 6px; color: #93c5fd;">Micro-Investimento (10€)</div>
+                            • Capitale: <b>€ 10,00</b><br>
+                            • Target Vendita: <b>€ {p_target:,.2f}</b><br>
+                            • Lordo: € {lordo_10:.2f}<br>
+                            • Commissioni TR: € 2,00<br>
+                            <hr style="margin: 6px 0; border-color: #3b82f6;">
+                            • Netto: <b style="color: {color_net10};">€ {netto_10:.2f}</b>
                             </div>
                             """, unsafe_allow_html=True)
-                            
-                        st.markdown("---")
+                    st.markdown("---")
     else:
-        st.info("👆 Clicca sul pulsante sopra per avviare la scansione dei mercati e visualizzare i segnali.")
+        st.info("💡 Clicca sul pulsante sopra per avviare la scansione dei mercati e visualizzare i segnali.")
 
 # =====================================================================
 # SCHERMATA 7: ASSISTENTE IA & SEGNALI
@@ -642,22 +673,20 @@ elif menu == "🚨 Sala Segnali (Day Trading)":
 elif menu == "🤖 Assistente IA & Segnali":
     st.title("🤖 Assistente IA & Consulente Finanziario")
     st.markdown("Interroga direttamente l'intelligenza artificiale di Google Gemini integrata in Edith per analisi di mercato approfondite, strategie di portafoglio o pareri su singoli asset.")
-
     prompt_utente = st.text_area(
         "Fai una domanda a Edith IA:",
         placeholder="Es. Quali sono i principali rischi macroeconomici per i mercati azionari quest'anno? O analizza i punti di forza di Microsoft."
     )
-
     if st.button("Invia a Edith IA", type="primary"):
         if not prompt_utente.strip():
             st.warning("⚠️ Inserisci prima una domanda o un argomento da analizzare.")
         else:
-            with st.spinner("🧠 Edith sta elaborando la risposta strategica..."):
+            with st.spinner("🤖 Edith sta elaborando la risposta strategica..."):
                 risposta_ia = get_gemini_response(prompt_utente)
-                
                 st.markdown("---")
                 st.subheader("💡 Risposta dell'Assistente")
                 st.write(risposta_ia)
-                
+                st.markdown("---")
+                st.info("📌 **Consiglio:** Puoi usare questa sezione per chiedere pareri su strategie di asset allocation, chiarimenti sui dividendi o simulazioni di scenario basate sulle ultime notizie finanziarie.")
     st.markdown("---")
     st.info("💡 **Consiglio:** Puoi usare questa sezione per chiedere pareri su strategie di asset allocation, chiarimenti sui dividendi o simulazioni di scenario basate sulle ultime notizie finanziarie.")
